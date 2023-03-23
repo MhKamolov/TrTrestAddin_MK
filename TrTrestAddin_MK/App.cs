@@ -17,7 +17,7 @@ namespace TrTrestAddin_MK
         {
             string tabName = "Третий Трест_МК";
             a.CreateRibbonTab(tabName);
-            // sadasdasd
+            
             #region AR
             RibbonPanel AR_panel = a.CreateRibbonPanel(tabName, "АР");
 
