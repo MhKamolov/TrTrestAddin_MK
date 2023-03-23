@@ -17,7 +17,7 @@ namespace TrTrestAddin_MK
         {
             string tabName = "Третий Трест_МК";
             a.CreateRibbonTab(tabName);
-
+            // sadasdasd
             #region AR
             RibbonPanel AR_panel = a.CreateRibbonPanel(tabName, "АР");
 
@@ -32,7 +32,7 @@ namespace TrTrestAddin_MK
             roomDecorationBtn.Image = ConvertToBitmap(roomDecorationImg, new Size(16, 16));
             #endregion
 
-
+            
             #region Struct 
             RibbonPanel KR_panel = a.CreateRibbonPanel(tabName, "КР");
 
