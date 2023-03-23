@@ -15,7 +15,7 @@ namespace TrTrestAddin_MK
     {
         public Result OnStartup(UIControlledApplication a)
         {
-            string tabName = "Третий Трест-МК";
+            string tabName = "Третий Трест_МК";
             a.CreateRibbonTab(tabName);
 
             #region AR
