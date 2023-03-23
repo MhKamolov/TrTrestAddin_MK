@@ -1,0 +1,15 @@
+C:\Users\m.kamolov\source\repos\TrTrestAddin_MK\TrTrestAddin_MK\bin\Debug\TrTrestAddin_MK.dll
+C:\Users\m.kamolov\source\repos\TrTrestAddin_MK\TrTrestAddin_MK\bin\Debug\TrTrestAddin_MK.pdb
+C:\Users\m.kamolov\source\repos\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.csproj.AssemblyReference.cache
+C:\Users\m.kamolov\source\repos\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.csproj.CoreCompileInputs.cache
+C:\Users\m.kamolov\source\repos\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.dll
+C:\Users\m.kamolov\source\repos\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.pdb
+D:\Visual Studio Projects\TrTrestAddin_MK\TrTrestAddin_MK\bin\Debug\TrTrestAddin_MK.dll
+D:\Visual Studio Projects\TrTrestAddin_MK\TrTrestAddin_MK\bin\Debug\TrTrestAddin_MK.pdb
+D:\Visual Studio Projects\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.csproj.AssemblyReference.cache
+D:\Visual Studio Projects\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.Properties.Resources.resources
+D:\Visual Studio Projects\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.csproj.GenerateResource.cache
+D:\Visual Studio Projects\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.csproj.CoreCompileInputs.cache
+D:\Visual Studio Projects\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.dll
+D:\Visual Studio Projects\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.pdb
+D:\Visual Studio Projects\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.Windows.AR_RoomDecorationForm.resources
