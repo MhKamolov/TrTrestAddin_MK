@@ -42,24 +42,23 @@ namespace TrTrestAddin_MK.Commands
              19.3 Удаление спецификации перед срабатывание плагина, чтобы не было оставленных спецификации, если пользователь уменшил количество ограждений -> 
              19.4 --- Перенос после определенной высоты, а не после 8-го образца, можно считать высоту каждой строке, нужна определенная высота (475 мм пока что с учетом новой заголовки (имя спецификации)), 
                         при превышение последнюю ограждению перенести на новой спецфк-ии, даже если только одна строка превышает 
-                        сделать регулируемая высота для перенса ->  
+                        сделать регулируемая высота для переноса ->  
         * 20. TableSeсtionData.SetCellStyle() - жирные границы для каждой ограждений -> Выполнено
         * 21. Исправить ситуацию с поле Количество в огр. Кровля -> Выполнено
         * 22. Исчезают Пробели в наименование составляющих элементов, например у огр. кровля у полосы в позиции обозначение материала - Выполнено
         * 23. В названии спецификации в конце добавить :   (Поменяйте названию) -> Выполнено
-        * 24. - Сделать отдельных спецификаций если ограждений кровли имееют разную "группа модели" (как будто это другие ограждений на уровне лоджий, поручень и т.д.) -- Сделать после рефакторинга, 
-              ограждения будут динамично сгруппироваться по Группу модели таким образом, когда добавляется новая семейство ограждение, не надо будет для него отдельно написать код - 
-        * 25. - Отчет по типовым ошибкам -
-        * 26. - Наследование название при обновление - 
-        * 27. - О куржок -
-        * 28. Вопросы - обсудить
+        * 24. Наследование название при обновление -> Выполнена
+        * 25. - Динамическое создание новых спецификаций, для любых (новых) семейств ограждений, а не только определенных (как сейчас)
+                Сделать отдельных спецификаций если ограждений кровли имееют разную "группа модели" (как будто это другие ограждений на уровне лоджий, поручень и т.д.) - 
+        * 26. - Отчет по типовым ошибкам -
+        * 27. - О куржок (Ренат) -
+        * 28. - Имя спецификации по регламенту (Ренат) -
+        * 29. Вопросы - обсудить
         
 
         *- Если проект прошел все тесты :
 
-        * Сделать для всех ссылающих параметров, переменные в начале, чтобы потом было легче их изменить
-        * В конце посмотреть какие параметры/аргументы (даже кроме ревита) могут изменится, и хранить их в переменных, которые объявлени в начале
-        * Найти все недоработанные моменты и доработать, искать в коментах 
+        * Найти все недоработанные моменты и доработать, искать в комментах 
         * Code Refactoring (Ссылька на вопрос #4)
         * Закоментить все, чтобы другие разрабы разбирались в данном коде
 
@@ -109,6 +108,8 @@ namespace TrTrestAddin_MK.Commands
            21 задача
            22 задача
            23 задача
+                                          24.03
+           24 задача
         */
 
     #region 
@@ -121,17 +122,17 @@ namespace TrTrestAddin_MK.Commands
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
-            
+
             using (Transaction tx = new Transaction(doc))
             {
                 tx.Start("Transaction Name");
 
 
                 // Получаю экземпляры все ограждений в проекте
-                List<FamilyInstance> all_Fences_Instances = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsNotElementType()                
+                List<FamilyInstance> all_Fences_Instances = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsNotElementType()
                  .Cast<FamilyInstance>().ToList();
 
-                
+
 
                 // Получаю все экземпляры спецификаций в проекте (нужен для дальнешей обработки)
                 List<ViewSchedule> ViewSchedules = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Schedules).WhereElementIsNotElementType().Cast<ViewSchedule>().ToList();
@@ -604,7 +605,7 @@ namespace TrTrestAddin_MK.Commands
                         FamilyInstance fam = doc.GetElement(item) as FamilyInstance;
 
                         famList.Add(fam); // Все составляющие элементы одной ограждений
-                        if (fam.Symbol.LookupParameter("ADSK_Наименование").AsValueString() != "Болт анкерный") 
+                        if (fam.Symbol.LookupParameter("ADSK_Наименование").AsValueString() != "Болт анкерный")
                         {
                             FExamples_Weight_Counter += fam.LookupParameter("ADSK_Масса").AsDouble();
                         }
@@ -985,9 +986,9 @@ namespace TrTrestAddin_MK.Commands
                     }
                 }
                 //
-                if (null == textNote)                
+                if (null == textNote)
                     throw new Exception("Отсутсвует нужный шрифт");
-                
+
                 // Заполнение спецификация лоджий
                 ScheduleFilling(vs, ListOfMatrixes[i], ListOfArrays_Arr_sech_prof_and_oboznach[i], ListOfArrays_Arr_mat_and_mat_Oboznach[i], vs_Name_Last, doc, catId, textNote);
 
@@ -1109,8 +1110,11 @@ namespace TrTrestAddin_MK.Commands
                     {
                         case 0: // Проверяю если есть уже строка то удаляю ее, и создаю новую
                                 // Первая строка для название Спецификации
-                            tsd.InsertRow(1);
-                            tsd.RemoveRow(0);
+                            if (tsd.GetCellText(i, 0).Trim() == "") // Чтобы при повторном срабатывание плагина, название не поменялась
+                            {
+                                tsd.SetCellText(i, 0, vs_Name);
+                            }
+
                             // Регулировка число столбцов (начало)
                             if (tsd.NumberOfColumns < Matrix.GetLength(1))
                             {
@@ -1150,9 +1154,7 @@ namespace TrTrestAddin_MK.Commands
                             }
                             // Подправление размер Столбцов таблицы - закончено (Подправление строк таблицы будет дальше)
 
-                            // 
-                            tsd.SetCellText(i, 0, vs_Name);
-                            //                                                       
+                                      
                             TableMergedCell mergecell_vs_Name = new TableMergedCell();
                             mergecell_vs_Name.Left = 0;
                             mergecell_vs_Name.Right = 7;
@@ -1633,3 +1635,4 @@ namespace TrTrestAddin_MK.Commands
     #endregion
 
 }
+    
