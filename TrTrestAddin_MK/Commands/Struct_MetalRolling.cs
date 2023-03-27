@@ -532,9 +532,21 @@ namespace TrTrestAddin_MK.Commands
 
             // Разделяю список образцовых ограждений на несколько таких списков по 8 образцов
             List<FamilyInstance> listFamTest = new List<FamilyInstance>();
+
+            List<int> rowCounts = new List<int>();
+            foreach (var item in fencesExamples_Distinct)
+            {
+                rowCounts.Add(item.GetSubComponentIds().Select(elId => doc.GetElement(elId) as FamilyInstance).DistinctBy(fam => fam.LookupParameter("ADSK_Позиция ведомость элементов").AsValueString()).Count());
+            }
+            TaskDialog.Show("t", String.Join("\n", rowCounts));
+            int scheduleHeight = 473 - 25; // уберем высоту первых двух строк (заголовок и название) таблицы, они вводятс потом
+            // 56 строк (448 мм) + 25мм
+            
+            int counter = 0;
             for (int i = 0; i < fencesExamples_Distinct.Count; i++)
             {
-                if (i % 8 > 0)
+                counter += rowCounts[i];
+                if (counter * 8 < scheduleHeight) // Высота каждой строки = 8 мм
                 {
                     listFamTest.Add(fencesExamples_Distinct[i]);
                 }
@@ -546,14 +558,14 @@ namespace TrTrestAddin_MK.Commands
                         listFamTest = new List<FamilyInstance>();
                     }
                     listFamTest.Add(fencesExamples_Distinct[i]);
+                    counter = 0;
                 }
 
                 if (i == fencesExamples_Distinct.Count - 1)
                 {
-                    listofList_FencesExamples_Distinct.Add(listFamTest); // Список из несколько списков по 8-образцовых экземпляров - Получено
+                    listofList_FencesExamples_Distinct.Add(listFamTest); // Список из несколько списков по 8-образцовых экземпляров ограждений - Получено
                 }
             }
-            //
 
             // Определяю количество строков массива путем считывание количество составляющих элементов всех ограждений в списке
             int Matrix_Lojiya_RowCount = 0;

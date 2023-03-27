@@ -22,3 +22,4 @@ D:\Visual Studio Projects\GitHub\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTre
 D:\Visual Studio Projects\GitHub\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.csproj.CoreCompileInputs.cache
 D:\Visual Studio Projects\GitHub\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.dll
 D:\Visual Studio Projects\GitHub\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.pdb
+D:\Visual Studio Projects\GitHub\TrTrestAddin_MK\TrTrestAddin_MK\obj\Debug\TrTrestAddin_MK.Windows.Struct_MetalRollingForm.resources

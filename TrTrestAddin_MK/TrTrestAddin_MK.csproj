@@ -75,6 +75,12 @@
     <Compile Include="Commands\AR_RoomDecoration.cs" />
     <Compile Include="MoreLinq\MoreEnumerable.DistinctBy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Windows\Struct_MetalRollingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Windows\Struct_MetalRollingForm.Designer.cs">
+      <DependentUpon>Struct_MetalRollingForm.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -89,6 +95,9 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Windows\Struct_MetalRollingForm.resx">
+      <DependentUpon>Struct_MetalRollingForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup />
