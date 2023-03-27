@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace TrTrestAddin_MK.Commands
 {
-    /*                                  Начать c: 989465
+    /*                                  Начать c:   
                                       19.4 - задачой   
 
     -                                   Задачи
