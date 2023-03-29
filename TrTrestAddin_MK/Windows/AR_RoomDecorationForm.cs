@@ -53,7 +53,7 @@ namespace TrTrestAddin_MK.Windows
 
         public ExternalEventClass myExternalClass;
         public ExternalEvent ExEvent;
-
+        
 
         //List<List<Room>> listOfListRooms = new List<List<Room>>(); // Вложенный - материнский  список
         List<Room> listOfRooms = new List<Room>(); // Список для хранение и отображения результатов
@@ -458,13 +458,15 @@ namespace TrTrestAddin_MK.Windows
         {
             uidoc = commandData.Application.ActiveUIDocument;
             doc = uidoc.Document;
-            //listOfListRoom_Got = listOfListRooms;
+            TaskDialog.Show("t", listOfRooms.Count.ToString());
             listOfRooms_Got = listOfRooms;
+            TaskDialog.Show("t", listOfRooms_Got.Count.ToString());
         }
 
         public void Execute(UIApplication app)
         {
             #region
+            TaskDialog.Show("t", "Execute method" + listOfRooms_Got.Count.ToString());
             ViewPlan vp = doc.ActiveView as ViewPlan;
             if (vp == null)
             {
