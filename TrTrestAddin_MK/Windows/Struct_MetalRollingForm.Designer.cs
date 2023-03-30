@@ -32,7 +32,8 @@
             this.Close = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.SuspendLayout();
             // 
             // OK
@@ -40,7 +41,7 @@
             this.OK.Location = new System.Drawing.Point(265, 136);
             this.OK.Name = "OK";
             this.OK.Size = new System.Drawing.Size(75, 23);
-            this.OK.TabIndex = 0;
+            this.OK.TabIndex = 1;
             this.OK.Text = "ОК";
             this.OK.UseVisualStyleBackColor = true;
             this.OK.Click += new System.EventHandler(this.OK_Click);
@@ -50,7 +51,7 @@
             this.Close.Location = new System.Drawing.Point(346, 136);
             this.Close.Name = "Close";
             this.Close.Size = new System.Drawing.Size(75, 23);
-            this.Close.TabIndex = 1;
+            this.Close.TabIndex = 2;
             this.Close.Text = "Закрыть";
             this.Close.UseVisualStyleBackColor = true;
             this.Close.Click += new System.EventHandler(this.Close_Click);
@@ -75,25 +76,36 @@
             this.label3.TabIndex = 5;
             this.label3.Text = "мм";
             // 
-            // textBox1
+            // numericUpDown1
             // 
-            this.textBox1.Location = new System.Drawing.Point(220, 49);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(100, 20);
-            this.textBox1.TabIndex = 6;
+            this.numericUpDown1.Location = new System.Drawing.Point(221, 49);
+            this.numericUpDown1.Maximum = new decimal(new int[] {
+            99999,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Name = "numericUpDown1";
+            this.numericUpDown1.Size = new System.Drawing.Size(120, 20);
+            this.numericUpDown1.TabIndex = 0;
+            this.numericUpDown1.Value = new decimal(new int[] {
+            475,
+            0,
+            0,
+            0});
             // 
             // Struct_MetalRollingForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(433, 171);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.numericUpDown1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.Close);
             this.Controls.Add(this.OK);
             this.Name = "Struct_MetalRollingForm";
             this.Text = "Struct_MetalRollingForm";
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -105,6 +117,6 @@
         private System.Windows.Forms.Button Close;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.NumericUpDown numericUpDown1;
     }
 }
