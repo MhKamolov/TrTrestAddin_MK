@@ -6,7 +6,8 @@ namespace TrTrestAddin_MK.Windows
     public partial class Struct_MetalRollingForm : Form
     {
         public int schHeight = 0;
-        public bool isFormClosed = false;
+        public bool isCloseBtnClicked = false;
+        public bool isOKBtnClicked = false;
         public Struct_MetalRollingForm()
         {
             InitializeComponent();
@@ -16,13 +17,26 @@ namespace TrTrestAddin_MK.Windows
         private void OK_Click(object sender, EventArgs e)
         {
             schHeight = (int)numericUpDown1.Value;
+            isOKBtnClicked = true;
             this.Close();
         }
 
         private void Close_Click(object sender, EventArgs e)
         {
-            isFormClosed = true;
+            isCloseBtnClicked = true;
             this.Close();
+        }
+
+        private void Struct_MetalRollingForm_FormClosed(object sender, System.Windows.Forms.FormClosedEventArgs e)
+        {
+            isCloseBtnClicked = true;
+            this.Close();
+        }
+
+        private void Struct_MetalRollingForm_FormClosing(object sender, System.Windows.Forms.FormClosingEventArgs e)
+        {
+            if (!isOKBtnClicked)
+                isCloseBtnClicked = true;
         }
     }
 }

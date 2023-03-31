@@ -12,7 +12,7 @@ using TrTrestAddin_MK.Windows;
 namespace TrTrestAddin_MK.Commands
 {
     /*                                  Начать c:   
-                                      19.4 - задачой   
+                                      26 - задачой   
 
     -                                   Задачи
         * 1. Заполнить аттрибутов "ADSK_Количества" и "ADSK_Масса" и "Наименование"   -> Выполнена 
@@ -49,7 +49,7 @@ namespace TrTrestAddin_MK.Commands
         * 22. Исчезают Пробели в наименование составляющих элементов, например у огр. кровля у полосы в позиции обозначение материала - Выполнено
         * 23. В названии спецификации в конце добавить :   (Поменяйте названию) -> Выполнено
         * 24. Наследование название при обновление -> Выполнена
-        * 25. - Динамическое создание новых спецификаций, для любых (новых) семейств ограждений, а не только определенных (как сейчас)
+        * 25. Динамическое создание новых спецификаций, для любых (новых) семейств ограждений, а не только определенных (как сейчас)
                 Сделать отдельных спецификаций если ограждений кровли имееют разную "группа модели" (как будто это другие ограждений на уровне лоджий, поручень и т.д.) -> 
         * 26. - Отчет по типовым ошибкам -
         * 27. - О кружок (Ренат) -
@@ -114,6 +114,8 @@ namespace TrTrestAddin_MK.Commands
                                           30.03
            19.4 задача
            19 задача
+                                          31.03
+           25 задача
         */
 
 
@@ -128,394 +130,138 @@ namespace TrTrestAddin_MK.Commands
             // Вызываю Форму
             Struct_MetalRollingForm frm = new Struct_MetalRollingForm();
             frm.ShowDialog();
-            if (frm.isFormClosed)
+            if (frm.isCloseBtnClicked)
                 return Result.Failed;
-            int scheduleHeight = frm.schHeight - 25; // уберем высоту первых двух строк (заголовок и название столбцов), так как не входят в массив (добавляются прямо в таблицу)
+            int scheduleHeight = frm.schHeight - 25; // убираю высоту первых двух строк (заголовок и название столбцов), так как не входят в массив (добавляются прямо в таблицу)
 
 
 
             #region Main Code
+
             using (Transaction tx = new Transaction(doc))
             {
                 tx.Start("Transaction Name");
+
+                //// Подготовка
                 // Получаю экземпляры все ограждений в проекте
                 List<FamilyInstance> all_Fences_Instances = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsNotElementType()
-                 .Cast<FamilyInstance>().ToList();
+                 .Cast<FamilyInstance>().OrderBy(fam => fam.Symbol.LookupParameter("Группа модели").AsValueString()).ToList();
+
+                // Группирую ограждений по параметру "Группа модели"
+                List<List<FamilyInstance>> fencesInstances_byGroupModel = new List<List<FamilyInstance>>();
+                fencesInstances_byGroupModel.Add(new List<FamilyInstance>());
+                int nestedListIndex = 0;
+                for (int i = 0; i < all_Fences_Instances.Count; i++)
+                {
+                    if (i != 0 && (all_Fences_Instances[i].Symbol.LookupParameter("Группа модели").AsValueString() != all_Fences_Instances[i - 1].Symbol.LookupParameter("Группа модели").AsValueString()))
+                    {
+                        fencesInstances_byGroupModel.Add(new List<FamilyInstance>());
+                        nestedListIndex++;
+                        fencesInstances_byGroupModel[nestedListIndex].Add(all_Fences_Instances[i]);
+                    }
+                    else
+                        fencesInstances_byGroupModel[nestedListIndex].Add(all_Fences_Instances[i]);
+                }
 
                 // Получаю все экземпляры спецификаций в проекте (нужен для дальнешей обработки)
                 List<ViewSchedule> ViewSchedules = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Schedules).WhereElementIsNotElementType().Cast<ViewSchedule>().ToList();
+                ////
+                
 
-
-
-
-
-
-                // Обработка ограждений лоджий
-                #region огр. Лоджия
-
-                // Получаю все экземпляры ограждений в проекте
-                #region  Получаю экземпляры ограждений Лоджий 
-
-                List<FamilyInstance> all_Fences_Instances_Lojiya = all_Fences_Instances.Where(fam => fam.Symbol.LookupParameter("Группа модели").AsValueString() == "Ограждение лоджии" // Получаю все экземпляры ограждений лоджий (далее просто ограждений),
-                && fam.Symbol.LookupParameter("ADSK_Марка").AsValueString() != null).ToList();                                                                                          // из списка экземпляров ограждений
-
-                // Сортировка ограждений по "ADSK_Марка"
-                List<string> sorted_stringList_Lojiya = listSort(all_Fences_Instances_Lojiya.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
-                all_Fences_Instances_Lojiya = all_Fences_Instances_Lojiya.OrderBy(fam => sorted_stringList_Lojiya.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
-
-                // Удаление ненужных спецификаций
-                string vs_Name_Lojiya = "Спецификация элементов Ограждение лоджии_";
-
-                if (all_Fences_Instances_Lojiya.Count == 0)
+                //// Начинаю Создание спецификации
+                foreach (List<FamilyInstance> item in fencesInstances_byGroupModel)
                 {
-                    foreach (var item in ViewSchedules)
+                    List<FamilyInstance> fencesInstances = item;
+                    string vs_Name = "";
+
+                    // Проверка на существование многоуровневых ограждений
+                    if (fencesInstances[0].SuperComponent != null)
                     {
-                        if (item.IsValidObject == true && item.Name.Contains(vs_Name_Lojiya))
+                        fencesInstances = fencesInstances.Select(fam => fam.SuperComponent).Cast<FamilyInstance>().ToList();
+                        vs_Name = "Спецификация элементов " + fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString() + "_";
+                        // Сортировка ограждений по "ADSK_Марка"
+                        List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
+                        fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
+                        fencesInstances = fencesInstances.Select(fam => doc.GetElement(fam.GetSubComponentIds().FirstOrDefault())).Cast<FamilyInstance>().ToList(); // Получено
+                    }
+                    else
+                    {
+                        vs_Name = "Спецификация элементов " + fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString() + "_";
+                        // Сортировка ограждений по "ADSK_Марка"
+                        List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
+                        fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
+                    }
+
+
+                    // Удаление ненужных спецификаций 
+                    if (fencesInstances.Count == 0)
+                    {
+                        foreach (var view in ViewSchedules)
                         {
-                            doc.Delete(item.Id);
+                            if (view.IsValidObject == true && view.Name.Contains(vs_Name))
+                            {
+                                doc.Delete(view.Id);
+                            }
                         }
                     }
-                }
-                #endregion
 
 
-                if (all_Fences_Instances_Lojiya.Count != 0)
-                {
-                    // Получаю размер строков массива
-                    #region Получаю размер строков массива для Ограждений лоджий
-
-                    List<List<FamilyInstance>> listofList_FencesExamples_Lojiya_Distinct = new List<List<FamilyInstance>>(); // Список из несколько списков по 8-образцовых экземпляров лоджий
-                    List<int> listOf_Matrix_Lojiya_RowCount = new List<int>(); // Для получение количество строк массивов
-                    RowCountDeterMine(doc, all_Fences_Instances_Lojiya, ref listofList_FencesExamples_Lojiya_Distinct, ref listOf_Matrix_Lojiya_RowCount, scheduleHeight);
-
-                    #endregion
-
-
-                    // Объявляю массив с определеннымы размерамы
-                    #region Массив огр. лоджий
-
-                    // Массив огр. лоджий
-                    List<string[,]> ListOfMatrixes_Lojiya = new List<string[,]>(); // Список массивов Лоджий - несколько массивов потому что несколько спецификации (каждый по 8-образцовых ограждений)
-                    List<string[]> ListOfArrays_Arr_sech_prof_and_oboznach_Lojiya = new List<string[]>();
-                    List<string[]> ListOfArrays_Arr_mat_and_mat_Oboznach_Lojiya = new List<string[]>();
-                    ArrayDeclare(ListOfMatrixes_Lojiya, ListOfArrays_Arr_sech_prof_and_oboznach_Lojiya, ListOfArrays_Arr_mat_and_mat_Oboznach_Lojiya,
-                        listOf_Matrix_Lojiya_RowCount, listofList_FencesExamples_Lojiya_Distinct);
-
-                    #endregion
-
-
-                    // Создаю вложенный список, для обработки данных, чтобы потом поставить в массив и добавляю суммарники для "ADSK_Количества" и "ADSK_Масса" 
-                    #region огр. лоджий
-
-                    List<List<List<FamilyInstance>>> ListOfListsOfLists_fencesExamples_Lojiya = new List<List<List<FamilyInstance>>>(); // Конечный список обрабативаемых данных - далее массив будет заполнятся именно по этому списку
-                    List<List<List<int>>> ListOfListsOfLists_FExamples_Lojiya_eachDetail_Amount = new List<List<List<int>>>(); // Для поле "Количество" (Количество каждый сост-элемент ограждений)
-                    List<List<double>> ListOfLists_FExamples_Lojiya_Weight_Amount = new List<List<double>>(); // Для поле "Масса изделия" (Сумма масс сост-элементов ограждений)
-                    BeforeArray2DFilling(listofList_FencesExamples_Lojiya_Distinct, ref ListOfListsOfLists_fencesExamples_Lojiya, ref ListOfListsOfLists_FExamples_Lojiya_eachDetail_Amount, ref ListOfLists_FExamples_Lojiya_Weight_Amount, doc);
-
-                    #endregion
-
-
-                    // Собираю все в массив, чтобы потом поставить в заголовку (как таблица)
-                    #region огр. лоджий 
-
-                    PutAllAtArray2d(ListOfListsOfLists_fencesExamples_Lojiya, listofList_FencesExamples_Lojiya_Distinct, ListOfMatrixes_Lojiya, ListOfListsOfLists_FExamples_Lojiya_eachDetail_Amount, ListOfLists_FExamples_Lojiya_Weight_Amount,
-                        ListOfArrays_Arr_sech_prof_and_oboznach_Lojiya, ListOfArrays_Arr_mat_and_mat_Oboznach_Lojiya, doc);
-
-                    #endregion
-
-
-                    // Этап поставки в заголовке
-                    #region Поставка в заголовок лоджия
-
-                    //vs_Name_Lojiya = "Спецификация элементов ограждений лоджий_";
-                    PutAtTableHeader(ListOfListsOfLists_fencesExamples_Lojiya, all_Fences_Instances, ViewSchedules, ListOfMatrixes_Lojiya, ListOfArrays_Arr_sech_prof_and_oboznach_Lojiya,
-                        ListOfArrays_Arr_mat_and_mat_Oboznach_Lojiya, vs_Name_Lojiya, doc);
-
-                    #endregion
-                }
-                #endregion
-
-
-
-
-
-
-                // Обработка ограждений кровли
-                #region огр. Кровли
-
-                // Получаю все экземпляры ограждений в проекте
-                #region  Получаю экземпляры ограждений Кровля 
-
-                List<FamilyInstance> all_Fences_Instances_Krovlya = all_Fences_Instances.Where(fam => fam.Symbol.LookupParameter("Группа модели").AsValueString() == "Ограждение кровли"
-                && fam.Symbol.LookupParameter("ADSK_Марка").AsValueString() != null).ToList();
-
-                List<string> sorted_stringList_Krovlya = listSort(all_Fences_Instances_Krovlya.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
-                all_Fences_Instances_Krovlya = all_Fences_Instances_Krovlya.OrderBy(fam => sorted_stringList_Krovlya.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получено
-
-                // Удаление ненужных спецификаций
-                string vs_Name_Krovlya = "Спецификация элементов Ограждение кровли_";
-                if (all_Fences_Instances_Krovlya.Count == 0)
-                {
-                    foreach (var item in ViewSchedules)
+                    if (fencesInstances.Count != 0)
                     {
-                        if (item.IsValidObject == true && item.Name.Contains(vs_Name_Krovlya))
-                        {
-                            doc.Delete(item.Id);
-                        }
+                        // Получаю размер строков массива
+                        #region Получаю размер строков массива для Ограждений
+
+                        List<List<FamilyInstance>> listofList_FencesExamples_Distinct = new List<List<FamilyInstance>>(); // Список из несколько списков по 8-образцовых экземпляров лоджий
+                        List<int> listOf_Matrix_RowCount = new List<int>(); // Для получение количество строк массивов
+                        RowCountDeterMine(doc, fencesInstances, ref listofList_FencesExamples_Distinct, ref listOf_Matrix_RowCount, scheduleHeight);
+
+                        #endregion
+
+
+                        // Объявляю массив с определеннымы размерамы
+                        #region Массив огр.
+
+                        // Массив огр. лоджий
+                        List<string[,]> ListOfMatrixes = new List<string[,]>(); // Список массивов Лоджий - несколько массивов потому что несколько спецификации (каждый по 8-образцовых ограждений)
+                        List<string[]> ListOfArrays_Arr_sech_prof_and_oboznach = new List<string[]>();
+                        List<string[]> ListOfArrays_Arr_mat_and_mat_Oboznach = new List<string[]>();
+                        ArrayDeclare(ListOfMatrixes, ListOfArrays_Arr_sech_prof_and_oboznach, ListOfArrays_Arr_mat_and_mat_Oboznach,
+                            listOf_Matrix_RowCount, listofList_FencesExamples_Distinct);
+
+                        #endregion
+
+
+                        // Создаю вложенный список, для обработки данных, чтобы потом поставить в массив и добавляю суммарники для "ADSK_Количества" и "ADSK_Масса" 
+                        #region огр. 
+
+                        List<List<List<FamilyInstance>>> ListOfListsOfLists_fencesExamples = new List<List<List<FamilyInstance>>>(); // Конечный список обрабативаемых данных - далее массив будет заполнятся именно по этому списку
+                        List<List<List<int>>> ListOfListsOfLists_FExamples_eachDetail_Amount = new List<List<List<int>>>(); // Для поле "Количество" (Количество каждый сост-элемент ограждений)
+                        List<List<double>> ListOfLists_FExamples_Weight_Amount = new List<List<double>>(); // Для поле "Масса изделия" (Сумма масс сост-элементов ограждений)
+                        BeforeArray2DFilling(listofList_FencesExamples_Distinct, ref ListOfListsOfLists_fencesExamples, ref ListOfListsOfLists_FExamples_eachDetail_Amount, ref ListOfLists_FExamples_Weight_Amount, doc);
+
+                        #endregion
+
+
+                        // Собираю все в массив, чтобы потом поставить в заголовку (как таблица)
+                        #region огр.  
+
+                        PutAllAtArray2d(ListOfListsOfLists_fencesExamples, listofList_FencesExamples_Distinct, ListOfMatrixes, ListOfListsOfLists_FExamples_eachDetail_Amount, ListOfLists_FExamples_Weight_Amount,
+                            ListOfArrays_Arr_sech_prof_and_oboznach, ListOfArrays_Arr_mat_and_mat_Oboznach, doc);
+
+                        #endregion
+
+
+                        // Этап поставки в заголовке
+                        #region Поставка в заголовок 
+
+                        PutAtTableHeader(ListOfListsOfLists_fencesExamples, all_Fences_Instances, ViewSchedules, ListOfMatrixes, ListOfArrays_Arr_sech_prof_and_oboznach,
+                            ListOfArrays_Arr_mat_and_mat_Oboznach, vs_Name, doc);
+
+                        #endregion
                     }
                 }
-                #endregion
-
-
-                if (all_Fences_Instances_Krovlya.Count != 0)
-                {
-                    // Получаю размер строков массива
-                    #region Получаю размер строков массива для Ограждений кровли
-
-                    List<List<FamilyInstance>> listofList_FencesExamples_Krovlya_Distinct = new List<List<FamilyInstance>>();
-                    List<int> listOf_Matrix_Krovlya_RowCount = new List<int>();
-                    RowCountDeterMine(doc, all_Fences_Instances_Krovlya, ref listofList_FencesExamples_Krovlya_Distinct, ref listOf_Matrix_Krovlya_RowCount, scheduleHeight);
-
-                    #endregion
-
-
-                    // Объявляю массив с определеннымы размерамы
-                    #region Массив огр. кровля
-
-                    // Массив огр. кровля
-                    List<string[,]> ListOfMatrixes_Krovlya = new List<string[,]>();
-                    List<string[]> ListOfArrays_Arr_sech_prof_and_oboznach_Krovlya = new List<string[]>();
-                    List<string[]> ListOfArrays_Arr_mat_and_mat_Oboznach_Krovlya = new List<string[]>();
-                    ArrayDeclare(ListOfMatrixes_Krovlya, ListOfArrays_Arr_sech_prof_and_oboznach_Krovlya, ListOfArrays_Arr_mat_and_mat_Oboznach_Krovlya,
-                       listOf_Matrix_Krovlya_RowCount, listofList_FencesExamples_Krovlya_Distinct);
-
-                    #endregion
-
-
-                    // Создаю вложенный список, для обработки данных, чтобы потом поставить в массив и добавляю суммарники для "ADSK_Количества" и "ADSK_Масса" 
-                    #region огр. кровля
-
-                    List<List<List<FamilyInstance>>> ListOfListsOfLists_fencesExamples_Krovlya = new List<List<List<FamilyInstance>>>();
-                    List<List<List<int>>> ListOfListsOfLists_FExamples_Krovlya_eachDetail_Amount = new List<List<List<int>>>();
-                    List<List<double>> ListOfLists_FExamples_Krovlya_Weight_Amount = new List<List<double>>();
-                    BeforeArray2DFilling(listofList_FencesExamples_Krovlya_Distinct, ref ListOfListsOfLists_fencesExamples_Krovlya, ref ListOfListsOfLists_FExamples_Krovlya_eachDetail_Amount, ref ListOfLists_FExamples_Krovlya_Weight_Amount, doc);
-
-                    #endregion
-
-
-                    // Собираю все в массив, чтобы потом поставить в заголовку (как таблица)
-                    #region огр. кровля
-
-                    PutAllAtArray2d(ListOfListsOfLists_fencesExamples_Krovlya, listofList_FencesExamples_Krovlya_Distinct, ListOfMatrixes_Krovlya, ListOfListsOfLists_FExamples_Krovlya_eachDetail_Amount, ListOfLists_FExamples_Krovlya_Weight_Amount,
-                        ListOfArrays_Arr_sech_prof_and_oboznach_Krovlya, ListOfArrays_Arr_mat_and_mat_Oboznach_Krovlya, doc);
-
-                    #endregion
-
-
-                    // Этап поставки в заголовке
-                    #region Поставка в заголовок кровля
-
-                    PutAtTableHeader(ListOfListsOfLists_fencesExamples_Krovlya, all_Fences_Instances, ViewSchedules, ListOfMatrixes_Krovlya, ListOfArrays_Arr_sech_prof_and_oboznach_Krovlya,
-                        ListOfArrays_Arr_mat_and_mat_Oboznach_Krovlya, vs_Name_Krovlya, doc); // Для Кровли (другие огр ниже)                                                                                         
-
-                    #endregion
-                }
-
-                #endregion
-
-
-
-
-
-
-                // Обработка ограждений ограждений и поручней  
-                #region огр. Поручень
-
-                // Получаю все экземпляры ограждений в проекте
-                #region Получаю экземпляры ограждений и поручней  
-
-                List<FamilyInstance> all_Fences_Instances_Poruchen = all_Fences_Instances.Where(fam => fam.Symbol.LookupParameter("Группа модели").AsValueString() == "Поручень металлический"
-                && fam.Symbol.LookupParameter("ADSK_Марка").AsValueString() != null).ToList();
-
-                List<string> sorted_stringList_Poruchen = listSort(all_Fences_Instances_Poruchen.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
-                all_Fences_Instances_Poruchen = all_Fences_Instances_Poruchen.OrderBy(fam => sorted_stringList_Poruchen.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получено
-
-                // Удаление ненужных спецификаций
-                string vs_Name_Poruchen = "Спецификация элементов Поручень металлический_";
-
-                if (all_Fences_Instances_Poruchen.Count == 0)
-                {
-                    foreach (var item in ViewSchedules)
-                    {
-                        if (item.IsValidObject == true && item.Name.Contains(vs_Name_Poruchen))
-                        {
-                            doc.Delete(item.Id);
-                        }
-                    }
-                }
-                #endregion
-
-
-
-                if (all_Fences_Instances_Poruchen.Count != 0)
-                {
-                    // Получаю размер строков массива
-                    #region Получаю размер строков массива для Ограждений и поручней 
-
-                    List<List<FamilyInstance>> listofList_FencesExamples_Poruchen_Distinct = new List<List<FamilyInstance>>();
-                    List<int> listOf_Matrix_Poruchen_RowCount = new List<int>();
-                    RowCountDeterMine(doc, all_Fences_Instances_Poruchen, ref listofList_FencesExamples_Poruchen_Distinct, ref listOf_Matrix_Poruchen_RowCount, scheduleHeight);
-
-                    #endregion
-
-
-                    // Объявляю массив с определеннымы размерамы
-                    #region Массив огр. поручень
-
-                    // Массив огр. поручень
-                    List<string[,]> ListOfMatrixes_Poruchen = new List<string[,]>();
-                    List<string[]> ListOfArrays_Arr_sech_prof_and_oboznach_Poruchen = new List<string[]>();
-                    List<string[]> ListOfArrays_Arr_mat_and_mat_Oboznach_Poruchen = new List<string[]>();
-                    ArrayDeclare(ListOfMatrixes_Poruchen, ListOfArrays_Arr_sech_prof_and_oboznach_Poruchen, ListOfArrays_Arr_mat_and_mat_Oboznach_Poruchen,
-                       listOf_Matrix_Poruchen_RowCount, listofList_FencesExamples_Poruchen_Distinct);
-
-                    #endregion
-
-
-                    // Создаю вложенный список, для обработки данных, чтобы потом поставить в массив и добавляю суммарники для "ADSK_Количества" и "ADSK_Масса" 
-                    #region огр. поручень _Poruchen
-
-                    List<List<List<FamilyInstance>>> ListOfListsOfLists_fencesExamples_Poruchen = new List<List<List<FamilyInstance>>>();
-                    List<List<List<int>>> ListOfListsOfLists_FExamples_Poruchen_eachDetail_Amount = new List<List<List<int>>>();
-                    List<List<double>> ListOfLists_FExamples_Poruchen_Weight_Amount = new List<List<double>>();
-                    BeforeArray2DFilling(listofList_FencesExamples_Poruchen_Distinct, ref ListOfListsOfLists_fencesExamples_Poruchen, ref ListOfListsOfLists_FExamples_Poruchen_eachDetail_Amount, ref ListOfLists_FExamples_Poruchen_Weight_Amount, doc);
-
-                    #endregion
-
-
-                    // Собираю все в массив, чтобы потом поставить в заголовку (как таблица)
-                    #region огр. поручень
-
-                    PutAllAtArray2d(ListOfListsOfLists_fencesExamples_Poruchen, listofList_FencesExamples_Poruchen_Distinct, ListOfMatrixes_Poruchen, ListOfListsOfLists_FExamples_Poruchen_eachDetail_Amount, ListOfLists_FExamples_Poruchen_Weight_Amount,
-                       ListOfArrays_Arr_sech_prof_and_oboznach_Poruchen, ListOfArrays_Arr_mat_and_mat_Oboznach_Poruchen, doc);
-
-                    #endregion
-
-
-                    // Этап поставки в заголовке
-                    #region Поставка в заголовок поручень
-
-                    PutAtTableHeader(ListOfListsOfLists_fencesExamples_Poruchen, all_Fences_Instances, ViewSchedules, ListOfMatrixes_Poruchen, ListOfArrays_Arr_sech_prof_and_oboznach_Poruchen,
-                        ListOfArrays_Arr_mat_and_mat_Oboznach_Poruchen, vs_Name_Poruchen, doc); // Для Поручней (другие огр ниже)
-
-                    #endregion
-                }
-
-                #endregion
-
-
-
-
-
-
-                // Обработка ограждений металлических решеток
-                #region огр. металлические решетки
-
-                // Получаю все экземпляры ограждений в проекте
-                #region  Получаю экземпляры (ограждений) металлических решеток
-
-                //var for_Met_Reshetka_part_1 = all_Fences_Instances.Where(fam => (fam.SuperComponent as FamilyInstance).Symbol.LookupParameter("Группа модели").AsValueString() == "Решетка металлическая")
-                //    .Select(fam => fam.SuperComponent).Cast<FamilyInstance>()
-                //    .Where(fam => fam.Symbol.LookupParameter("Группа модели").AsValueString() == "Решетка металлическая" && fam.Symbol.LookupParameter("ADSK_Марка").AsValueString() != null).ToList();
-
-                var for_Met_Reshetka_part_1 = all_Fences_Instances.Where(fam => fam.Symbol.LookupParameter("ADSK_Наименование").AsValueString() == "Решетка металлическая")
-                    .Select(fam => fam.SuperComponent).Cast<FamilyInstance>().ToList();
-
-                var for_Met_Reshetka_part_2 = for_Met_Reshetka_part_1
-                    .Where(fam => fam.Symbol.LookupParameter("Группа модели").AsValueString() == "Решетка металлическая" && fam.Symbol.LookupParameter("ADSK_Марка").AsValueString() != null).ToList();
-
-                List<string> sorted_stringListt_Met_Reshetka_part_2 = listSort(for_Met_Reshetka_part_2.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
-                for_Met_Reshetka_part_2 = for_Met_Reshetka_part_2.OrderBy(fam => sorted_stringListt_Met_Reshetka_part_2.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList();
-                List<FamilyInstance> all_Fences_Instances_Met_Reshetka = for_Met_Reshetka_part_2.Select(x => doc.GetElement(x.GetSubComponentIds().FirstOrDefault())).Cast<FamilyInstance>().ToList(); // Получено
-
-                // Удаление ненужных спецификаций
-                string vs_Name_Met_Reshetka = "Спецификация элементов Решетка металлическая_";
-
-                if (all_Fences_Instances_Met_Reshetka.Count == 0)
-                {
-                    foreach (var item in ViewSchedules)
-                    {
-                        if (item.IsValidObject == true && item.Name.Contains(vs_Name_Met_Reshetka))
-                        {
-                            doc.Delete(item.Id);
-                        }
-                    }
-                }
-                #endregion
-
-
-                if (all_Fences_Instances_Met_Reshetka.Count != 0)
-                {
-                    // Получаю размер строков массива
-                    #region Получаю размер строков массива для (ограждений) металлических решеток
-
-                    List<List<FamilyInstance>> listofList_FencesExamples_Met_Reshetka_Distinct = new List<List<FamilyInstance>>();
-                    List<int> listOf_Matrix_Met_Reshetka_RowCount = new List<int>();
-                    RowCountDeterMine(doc, all_Fences_Instances_Met_Reshetka, ref listofList_FencesExamples_Met_Reshetka_Distinct, ref listOf_Matrix_Met_Reshetka_RowCount, scheduleHeight);
-
-                    #endregion
-
-
-                    // Объявляю массив с определеннымы размерамы
-                    #region Массив огр. мет-решеток
-
-                    // Массив огр. мет-решеток
-                    List<string[,]> ListOfMatrixes_Met_Reshetka = new List<string[,]>();
-                    List<string[]> ListOfArrays_Arr_sech_prof_and_oboznach_Met_Reshetka = new List<string[]>();
-                    List<string[]> ListOfArrays_Arr_mat_and_mat_Oboznach_Met_Reshetka = new List<string[]>();
-                    ArrayDeclare(ListOfMatrixes_Met_Reshetka, ListOfArrays_Arr_sech_prof_and_oboznach_Met_Reshetka, ListOfArrays_Arr_mat_and_mat_Oboznach_Met_Reshetka,
-                       listOf_Matrix_Met_Reshetka_RowCount, listofList_FencesExamples_Met_Reshetka_Distinct);
-
-                    #endregion
-
-
-                    // Создаю вложенный список, для обработки данных, чтобы потом поставить в массив и добавляю суммарники для "ADSK_Количества" и "ADSK_Масса" 
-                    #region огр. мет-решеток _Met_Reshetka
-
-                    List<List<List<FamilyInstance>>> ListOfListsOfLists_fencesExamples_Met_Reshetka = new List<List<List<FamilyInstance>>>();
-                    List<List<List<int>>> ListOfListsOfLists_FExamples_Met_Reshetka_eachDetail_Amount = new List<List<List<int>>>();
-                    List<List<double>> ListOfLists_FExamples_Met_Reshetka_Weight_Amount = new List<List<double>>();
-                    BeforeArray2DFilling(listofList_FencesExamples_Met_Reshetka_Distinct, ref ListOfListsOfLists_fencesExamples_Met_Reshetka, ref ListOfListsOfLists_FExamples_Met_Reshetka_eachDetail_Amount, ref ListOfLists_FExamples_Met_Reshetka_Weight_Amount, doc);
-
-                    #endregion
-
-
-                    // Собираю все в массив, чтобы потом поставить в заголовку (как таблица)
-                    #region огр. мет-решеток - Last
-
-                    PutAllAtArray2d(ListOfListsOfLists_fencesExamples_Met_Reshetka, listofList_FencesExamples_Met_Reshetka_Distinct, ListOfMatrixes_Met_Reshetka,
-                        ListOfListsOfLists_FExamples_Met_Reshetka_eachDetail_Amount, ListOfLists_FExamples_Met_Reshetka_Weight_Amount,
-                       ListOfArrays_Arr_sech_prof_and_oboznach_Met_Reshetka, ListOfArrays_Arr_mat_and_mat_Oboznach_Met_Reshetka, doc);
-
-                    #endregion
-
-
-                    // Этап поставки в заголовке
-                    #region Поставка в заголовок мет-решетки
-
-                    PutAtTableHeader(ListOfListsOfLists_fencesExamples_Met_Reshetka, all_Fences_Instances, ViewSchedules, ListOfMatrixes_Met_Reshetka, ListOfArrays_Arr_sech_prof_and_oboznach_Met_Reshetka,
-                        ListOfArrays_Arr_mat_and_mat_Oboznach_Met_Reshetka, vs_Name_Met_Reshetka, doc); // Для Металлических решеток (другие огр ниже)
-
-                    #endregion
-                }
-
-                #endregion
-
-
-
-
-
-
+                ////
+                
                 TaskDialog.Show("Внимание!", "Успешно");
                 tx.Commit();
             }
@@ -1501,8 +1247,8 @@ namespace TrTrestAddin_MK.Commands
         }
 
 
-        //
-        // Подаем List<string> получаем обратно этот список, уже сортированный
+        /*
+        Подаем List<string> получаем обратно этот список, уже сортированный*/
         public static List<string> listSort(List<string> list_str)
         {
             NumericComparer nc = new NumericComparer();

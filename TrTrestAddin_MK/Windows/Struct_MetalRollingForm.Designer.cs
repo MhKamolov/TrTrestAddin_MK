@@ -105,6 +105,7 @@
             this.Controls.Add(this.OK);
             this.Name = "Struct_MetalRollingForm";
             this.Text = "Struct_MetalRollingForm";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Struct_MetalRollingForm_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
