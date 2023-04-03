@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TrTrestAddin_MK.Windows;
+using System.Windows.Forms;
 
 namespace TrTrestAddin_MK.Commands
 {
@@ -50,10 +51,11 @@ namespace TrTrestAddin_MK.Commands
         * 23. В названии спецификации в конце добавить :   (Поменяйте названию) -> Выполнено
         * 24. Наследование название при обновление -> Выполнена
         * 25. Динамическое создание новых спецификаций, для любых (новых) семейств ограждений, а не только определенных (как сейчас)
-                Сделать отдельных спецификаций если ограждений кровли имееют разную "группа модели" (как будто это другие ограждений на уровне лоджий, поручень и т.д.) -> 
-        * 26. - Отчет по типовым ошибкам -
-        * 27. - О кружок (Ренат) -
-        * 28. - Имя спецификации по регламенту (Ренат) -
+                Сделать отдельных спецификаций если ограждений кровли имееют разную "Описание" (как будто это другие ограждений на уровне лоджий, поручень и т.д.) -> 
+        * 26. -- Имя спецификации по регламенту (Ренат) -
+        * 27. - Отчет по типовым ошибкам -
+        * 28. - О кружок (Ренат) -
+        * 29. - Исправить ситуацию со шрифтом ADSK_сжатый !!! *** -
         * 29. Вопросы - обсудить
         
 
@@ -133,8 +135,7 @@ namespace TrTrestAddin_MK.Commands
             if (frm.isCloseBtnClicked)
                 return Result.Failed;
             int scheduleHeight = frm.schHeight - 25; // убираю высоту первых двух строк (заголовок и название столбцов), так как не входят в массив (добавляются прямо в таблицу)
-
-
+            MessageBox.Show("asd","Worning!");
 
             #region Main Code
 
@@ -144,16 +145,33 @@ namespace TrTrestAddin_MK.Commands
 
                 //// Подготовка
                 // Получаю экземпляры все ограждений в проекте
-                List<FamilyInstance> all_Fences_Instances = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsNotElementType()
-                 .Cast<FamilyInstance>().OrderBy(fam => fam.Symbol.LookupParameter("Группа модели").AsValueString()).ToList();
 
-                // Группирую ограждений по параметру "Группа модели"
+                List<FamilyInstance> all_Fences_Instances = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsNotElementType()
+                 .Cast<FamilyInstance>().OrderBy(fam => fam.Symbol.LookupParameter("Описание").AsValueString()).ToList();
+
+                // Проверка на отсутствие значение у параметра "Описание"
+                List<string> strList = new List<string>();
+                foreach (var item in all_Fences_Instances)
+                {
+                    if (item.SuperComponent != null && ((item.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString() == null || (item.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString().Trim() == ""))
+                    {
+                        strList.Add((item.SuperComponent as FamilyInstance).Symbol.Name);
+                    }
+                    if (item.SuperComponent == null && (item.Symbol.LookupParameter("Описание").AsValueString() == null || item.Symbol.LookupParameter("Описание").AsValueString().Trim() == ""))
+                    {
+                        strList.Add(item.Name);
+                    }
+                }
+                if (strList.Count > 0)
+                    throw new Exception("Параметр 'Описание' не имеет значение у следующих типоразмеров : \n" + String.Join("\n", strList));
+                
+                // Группирую ограждений по параметру "Описание"
                 List<List<FamilyInstance>> fencesInstances_byGroupModel = new List<List<FamilyInstance>>();
                 fencesInstances_byGroupModel.Add(new List<FamilyInstance>());
                 int nestedListIndex = 0;
                 for (int i = 0; i < all_Fences_Instances.Count; i++)
                 {
-                    if (i != 0 && (all_Fences_Instances[i].Symbol.LookupParameter("Группа модели").AsValueString() != all_Fences_Instances[i - 1].Symbol.LookupParameter("Группа модели").AsValueString()))
+                    if (i != 0 && (all_Fences_Instances[i].Symbol.LookupParameter("Описание").AsValueString() != all_Fences_Instances[i - 1].Symbol.LookupParameter("Описание").AsValueString()))
                     {
                         fencesInstances_byGroupModel.Add(new List<FamilyInstance>());
                         nestedListIndex++;
@@ -166,19 +184,20 @@ namespace TrTrestAddin_MK.Commands
                 // Получаю все экземпляры спецификаций в проекте (нужен для дальнешей обработки)
                 List<ViewSchedule> ViewSchedules = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Schedules).WhereElementIsNotElementType().Cast<ViewSchedule>().ToList();
                 ////
-                
+
 
                 //// Начинаю Создание спецификации
                 foreach (List<FamilyInstance> item in fencesInstances_byGroupModel)
                 {
                     List<FamilyInstance> fencesInstances = item;
                     string vs_Name = "";
-
-                    // Проверка на существование многоуровневых ограждений
+                    string modelGroupValue = "";
+                    // Проверка на существование многоуровневых ограждений                    
                     if (fencesInstances[0].SuperComponent != null)
                     {
                         fencesInstances = fencesInstances.Select(fam => fam.SuperComponent).Cast<FamilyInstance>().ToList();
-                        vs_Name = "Спецификация элементов " + fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString() + "_";
+                        vs_Name = "О_" + fencesInstances[0].Symbol.LookupParameter("Описание").AsValueString() + "_#";
+                        modelGroupValue = fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString();
                         // Сортировка ограждений по "ADSK_Марка"
                         List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
                         fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
@@ -186,12 +205,12 @@ namespace TrTrestAddin_MK.Commands
                     }
                     else
                     {
-                        vs_Name = "Спецификация элементов " + fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString() + "_";
+                        vs_Name = "О_" + fencesInstances[0].Symbol.LookupParameter("Описание").AsValueString() + "_#";
+                        modelGroupValue = fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString();
                         // Сортировка ограждений по "ADSK_Марка"
                         List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
                         fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
                     }
-
 
                     // Удаление ненужных спецификаций 
                     if (fencesInstances.Count == 0)
@@ -199,9 +218,7 @@ namespace TrTrestAddin_MK.Commands
                         foreach (var view in ViewSchedules)
                         {
                             if (view.IsValidObject == true && view.Name.Contains(vs_Name))
-                            {
                                 doc.Delete(view.Id);
-                            }
                         }
                     }
 
@@ -255,13 +272,13 @@ namespace TrTrestAddin_MK.Commands
                         #region Поставка в заголовок 
 
                         PutAtTableHeader(ListOfListsOfLists_fencesExamples, all_Fences_Instances, ViewSchedules, ListOfMatrixes, ListOfArrays_Arr_sech_prof_and_oboznach,
-                            ListOfArrays_Arr_mat_and_mat_Oboznach, vs_Name, doc);
+                            ListOfArrays_Arr_mat_and_mat_Oboznach, vs_Name, modelGroupValue, doc);
 
                         #endregion
                     }
                 }
                 ////
-                
+
                 TaskDialog.Show("Внимание!", "Успешно");
                 tx.Commit();
             }
@@ -275,6 +292,7 @@ namespace TrTrestAddin_MK.Commands
         {
             List<FamilyInstance> fencesExamples_Distinct = new List<FamilyInstance>();
             // Получаю образцовые ограждений, с каждого типа (путем удаления похожих экземпляров)
+
             if (all_Fences_Instances.FirstOrDefault().SuperComponent != null)
             {
                 fencesExamples_Distinct = all_Fences_Instances.DistinctBy(fam => (fam.SuperComponent as FamilyInstance).Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList(); // если огр. "Мет-решетка" (она 3-х уровеневая, а все другие 2-х уровневые)
@@ -694,7 +712,7 @@ namespace TrTrestAddin_MK.Commands
 
 
         static void PutAtTableHeader(List<List<List<FamilyInstance>>> ListOfListsOfLists_fencesExamples, List<FamilyInstance> all_Fences_Instances, List<ViewSchedule> ViewSchedules,
-            List<string[,]> ListOfMatrixes, List<string[]> ListOfArrays_Arr_sech_prof_and_oboznach, List<string[]> ListOfArrays_Arr_mat_and_mat_Oboznach, string vs_Name,
+            List<string[,]> ListOfMatrixes, List<string[]> ListOfArrays_Arr_sech_prof_and_oboznach, List<string[]> ListOfArrays_Arr_mat_and_mat_Oboznach, string vs_Name, string modelGroupValue,
             Document doc)
         {
             // Удаление ненужных спецификаций
@@ -713,8 +731,12 @@ namespace TrTrestAddin_MK.Commands
                 // Объвление переменных для создание спецификаций
                 ViewSchedule vs = null;
                 //
-                string vs_Name_Last = vs_Name + a.ToString() + "  (Переименуйте заголовок)";
+                string vs_Name_Last = "";
+                vs_Name_Last = vs_Name + a.ToString();
+                if (a < 10)
+                    vs_Name_Last = vs_Name + "0" + a.ToString();
                 //
+
                 bool vs_checker = false;
 
                 // Проверка на существующей спецификации и его создание в случае отсутсвие
@@ -730,10 +752,9 @@ namespace TrTrestAddin_MK.Commands
                     }
                 }
 
-                if (!vs_checker) // Создание в случае отсутствие
-                {
+                if (!vs_checker) // Создание в случае отсутствие                
                     vs = CreateSсheduleWithFields(vs_Name_Last, ListOfMatrixes[i].GetLength(1), doc, catId);
-                }
+
 
                 //// Приведение спецификации в порядке
                 // Для Установление шрифта для заголовок
@@ -743,16 +764,17 @@ namespace TrTrestAddin_MK.Commands
                 {
                     foreach (var item in textNotes)
                     {
-                        if (item.Name.Trim() == "ADSK_Основной текст_2.5 (сжатый)".Trim())
+                        if (item.Name.Trim() == "ADSK_Основной текст_2.5(сжатый)".Trim())
                         {
                             textNote = (TextNote)item;
                             break;
                         }
                     }
                 }
+                vs.LookupParameter("ADSK_Назначение вида").Set(modelGroupValue);
                 //
-                if (null == textNote)
-                    throw new Exception("Отсутсвует нужный шрифт");
+                if (textNote == null)
+                    throw new Exception("Отсутствует нужный шрифт");
 
                 // Заполнение спецификация лоджий
                 ScheduleFilling(vs, ListOfMatrixes[i], ListOfArrays_Arr_sech_prof_and_oboznach[i], ListOfArrays_Arr_mat_and_mat_Oboznach[i], vs_Name_Last, doc, catId, textNote);
