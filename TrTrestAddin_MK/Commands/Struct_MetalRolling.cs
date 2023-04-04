@@ -52,10 +52,9 @@ namespace TrTrestAddin_MK.Commands
         * 24. Наследование название при обновление -> Выполнена
         * 25. Динамическое создание новых спецификаций, для любых (новых) семейств ограждений, а не только определенных (как сейчас)
                 Сделать отдельных спецификаций если ограждений кровли имееют разную "Описание" (как будто это другие ограждений на уровне лоджий, поручень и т.д.) -> 
-        * 26. -- Имя спецификации по регламенту (Ренат) -
+        * 26. Имя спецификации по регламенту (Ренат) - Выполнено
         * 27. - Отчет по типовым ошибкам -
         * 28. - О кружок (Ренат) -
-        * 29. - Исправить ситуацию со шрифтом ADSK_сжатый !!! *** -
         * 29. Вопросы - обсудить
         
 
@@ -118,6 +117,8 @@ namespace TrTrestAddin_MK.Commands
            19 задача
                                           31.03
            25 задача
+                                          04.04
+           26 задача
         */
 
 
@@ -130,12 +131,11 @@ namespace TrTrestAddin_MK.Commands
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
             // Вызываю Форму
-            Struct_MetalRollingForm frm = new Struct_MetalRollingForm();
-            frm.ShowDialog();
-            if (frm.isCloseBtnClicked)
+            Struct_MetalRollingInputForm inputFrm = new Struct_MetalRollingInputForm();
+            inputFrm.ShowDialog();
+            if (inputFrm.isCloseBtnClicked)
                 return Result.Failed;
-            int scheduleHeight = frm.schHeight - 25; // убираю высоту первых двух строк (заголовок и название столбцов), так как не входят в массив (добавляются прямо в таблицу)
-            MessageBox.Show("asd","Worning!");
+            int scheduleHeight = inputFrm.schHeight - 25; // убираю высоту первых двух строк (заголовок и название столбцов), так как не входят в массив (добавляются прямо в таблицу)
 
             #region Main Code
 
@@ -144,27 +144,53 @@ namespace TrTrestAddin_MK.Commands
                 tx.Start("Transaction Name");
 
                 //// Подготовка
+                #region
                 // Получаю экземпляры все ограждений в проекте
 
                 List<FamilyInstance> all_Fences_Instances = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsNotElementType()
                  .Cast<FamilyInstance>().OrderBy(fam => fam.Symbol.LookupParameter("Описание").AsValueString()).ToList();
 
                 // Проверка на отсутствие значение у параметра "Описание"
-                List<string> strList = new List<string>();
+                List<string> wrongFences = new List<string>();
                 foreach (var item in all_Fences_Instances)
                 {
                     if (item.SuperComponent != null && ((item.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString() == null || (item.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString().Trim() == ""))
                     {
-                        strList.Add((item.SuperComponent as FamilyInstance).Symbol.Name);
+                        wrongFences.Add((item.SuperComponent as FamilyInstance).Symbol.Name);
                     }
                     if (item.SuperComponent == null && (item.Symbol.LookupParameter("Описание").AsValueString() == null || item.Symbol.LookupParameter("Описание").AsValueString().Trim() == ""))
                     {
-                        strList.Add(item.Name);
+                        wrongFences.Add(item.Name);
                     }
                 }
-                if (strList.Count > 0)
-                    throw new Exception("Параметр 'Описание' не имеет значение у следующих типоразмеров : \n" + String.Join("\n", strList));
-                
+                //Форма для заполнение огр у котроых отсутствует параметр "Описание"
+                Struct_MetalRollingEditingForm editFrm = new Struct_MetalRollingEditingForm(wrongFences);
+                if (wrongFences.Count > 0)
+                {
+                    editFrm.ShowDialog();
+                    if (editFrm.isCloseBtnClicked == true)
+                    {
+                        return Result.Failed;
+                    }
+
+                    for (int i = 0; i < all_Fences_Instances.Count; i++)
+                    {
+                        for (int j = 0; j < editFrm.fencesNames.Count; j++)
+                        {
+                            if (all_Fences_Instances[i].SuperComponent == null && all_Fences_Instances[i].Symbol.Name == editFrm.fencesNames[j])
+                            {
+                                all_Fences_Instances[i].Symbol.LookupParameter("Описание").Set(editFrm.fencesDescriptions[j]);
+                                break;
+                            }
+                            if (all_Fences_Instances[i].SuperComponent != null && (all_Fences_Instances[i].SuperComponent as FamilyInstance).Symbol.Name == editFrm.fencesNames[j])
+                            {
+                                (all_Fences_Instances[i].SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").Set(editFrm.fencesDescriptions[j]);
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 // Группирую ограждений по параметру "Описание"
                 List<List<FamilyInstance>> fencesInstances_byGroupModel = new List<List<FamilyInstance>>();
                 fencesInstances_byGroupModel.Add(new List<FamilyInstance>());
@@ -184,7 +210,7 @@ namespace TrTrestAddin_MK.Commands
                 // Получаю все экземпляры спецификаций в проекте (нужен для дальнешей обработки)
                 List<ViewSchedule> ViewSchedules = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Schedules).WhereElementIsNotElementType().Cast<ViewSchedule>().ToList();
                 ////
-
+                #endregion
 
                 //// Начинаю Создание спецификации
                 foreach (List<FamilyInstance> item in fencesInstances_byGroupModel)
@@ -764,7 +790,7 @@ namespace TrTrestAddin_MK.Commands
                 {
                     foreach (var item in textNotes)
                     {
-                        if (item.Name.Trim() == "ADSK_Основной текст_2.5(сжатый)".Trim())
+                        if (item.Name.Trim() == "ADSK_Основной текст_2.5 (сжатый)".Trim())
                         {
                             textNote = (TextNote)item;
                             break;
