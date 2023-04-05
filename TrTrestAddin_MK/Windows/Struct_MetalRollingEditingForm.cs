@@ -21,19 +21,13 @@ namespace TrTrestAddin_MK.Windows
         public Struct_MetalRollingEditingForm(List<string> wrongFences)
         {
             InitializeComponent();
+            
             foreach (var item in wrongFences)
             {
                 listBox1.Items.Add(item);
             }
             if (listBox1.Items.Count > 0)
                 listBox1.SelectedIndex = 0;
-        }
-
-        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            label2.Text = "";
-            if (listBox1.SelectedItem != null)
-                label2.Text = listBox1.SelectedItem.ToString();
         }
 
         private void fillBtn_Click(object sender, EventArgs e)

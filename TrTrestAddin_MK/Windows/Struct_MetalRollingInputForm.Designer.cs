@@ -38,7 +38,7 @@
             // 
             // OK
             // 
-            this.OK.Location = new System.Drawing.Point(265, 136);
+            this.OK.Location = new System.Drawing.Point(289, 113);
             this.OK.Name = "OK";
             this.OK.Size = new System.Drawing.Size(75, 23);
             this.OK.TabIndex = 1;
@@ -48,7 +48,7 @@
             // 
             // Close
             // 
-            this.Close.Location = new System.Drawing.Point(346, 136);
+            this.Close.Location = new System.Drawing.Point(370, 113);
             this.Close.Name = "Close";
             this.Close.Size = new System.Drawing.Size(75, 23);
             this.Close.TabIndex = 2;
@@ -60,17 +60,17 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label1.Location = new System.Drawing.Point(44, 49);
+            this.label1.Location = new System.Drawing.Point(12, 49);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(170, 16);
+            this.label1.Size = new System.Drawing.Size(266, 16);
             this.label1.TabIndex = 3;
-            this.label1.Text = "* Высота Спецификация :";
+            this.label1.Text = "*Максимальная высота Спецификаций :";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.label3.Location = new System.Drawing.Point(346, 49);
+            this.label3.Location = new System.Drawing.Point(408, 49);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(25, 16);
             this.label3.TabIndex = 5;
@@ -78,7 +78,7 @@
             // 
             // numericUpDown1
             // 
-            this.numericUpDown1.Location = new System.Drawing.Point(221, 49);
+            this.numericUpDown1.Location = new System.Drawing.Point(283, 49);
             this.numericUpDown1.Maximum = new decimal(new int[] {
             99999,
             0,
@@ -93,18 +93,18 @@
             0,
             0});
             // 
-            // Struct_MetalRollingForm
+            // Struct_MetalRollingInputForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(433, 171);
+            this.ClientSize = new System.Drawing.Size(457, 148);
             this.Controls.Add(this.numericUpDown1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.Close);
             this.Controls.Add(this.OK);
-            this.Name = "Struct_MetalRollingForm";
-            this.Text = "Struct_MetalRollingForm";
+            this.Name = "Struct_MetalRollingInputForm";
+            this.Text = "Ввод значение";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Struct_MetalRollingForm_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);

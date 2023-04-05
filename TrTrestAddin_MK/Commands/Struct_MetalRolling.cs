@@ -13,7 +13,7 @@ using System.Windows.Forms;
 namespace TrTrestAddin_MK.Commands
 {
     /*                                  Начать c:   
-                                      26 - задачой   
+                                      27 - задачой   
 
     -                                   Задачи
         * 1. Заполнить аттрибутов "ADSK_Количества" и "ADSK_Масса" и "Наименование"   -> Выполнена 
@@ -24,8 +24,6 @@ namespace TrTrestAddin_MK.Commands
         * 5. Добавить в начале списке Строка заголовки с названием Столбцов и потом уже остальное, но это напоследок -> Выполнена
         * 6. Упорядочить по ADSK_Марка -> Выполнена 
         * 7. Исправить ситуацию с Active.ViewSchedule сделать независимым -> Выполнена
-
-                                         01.12
         * 8. Обновление таблицы при повторном использование -> Выполнена
         * 9. Полоса поле "Наименование подправить согласно инструкции Рената на бумаге" -> Выполнена
         * 10. Статические размеры для столбцов таблицы -> Выполнена
@@ -54,9 +52,8 @@ namespace TrTrestAddin_MK.Commands
                 Сделать отдельных спецификаций если ограждений кровли имееют разную "Описание" (как будто это другие ограждений на уровне лоджий, поручень и т.д.) -> 
         * 26. Имя спецификации по регламенту (Ренат) - Выполнено
         * 27. - Отчет по типовым ошибкам -
-        * 28. - О кружок (Ренат) -
-        * 29. Вопросы - обсудить
-        
+        * 28. - Сделать переменные для lookupParameter, потому название параметров могут в будущем изменятся -
+        * 39. Вопросы - обсудить
 
         *- Если проект прошел все тесты :
 
@@ -75,7 +72,7 @@ namespace TrTrestAddin_MK.Commands
          *                                28.11
            1 задача
            2 задача
-         *                                29.11
+         *                                29.11 
            3 задача
            4 задача
            5 задача
@@ -144,17 +141,50 @@ namespace TrTrestAddin_MK.Commands
                 tx.Start("Transaction Name");
 
                 //// Подготовка
-                #region
+                #region Подготовка
                 // Получаю экземпляры все ограждений в проекте
 
                 List<FamilyInstance> all_Fences_Instances = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsNotElementType()
                  .Cast<FamilyInstance>().OrderBy(fam => fam.Symbol.LookupParameter("Описание").AsValueString()).ToList();
 
+                // Получаю все экземпляры спецификаций в проекте (нужен для дальнешей обработки)
+
+                List<ViewSchedule> ViewSchedules = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Schedules).WhereElementIsNotElementType().Where(v => v.LookupParameter("ADSK_Назначение вида") != null).Cast<ViewSchedule>().ToList();
+
+                // Удаление ненужных спецификаций 
+                if (all_Fences_Instances.Count == 0)
+                {
+                    List<ViewSchedule> MetalRolling_ViewSchedules = ViewSchedules.Where(v => v.LookupParameter("ADSK_Назначение вида").AsValueString() == "Металлические конструкции").ToList();
+                    if (MetalRolling_ViewSchedules.Count != 0)
+                    {
+                        if (MessageBox.Show("Не найдено ни одного экземпляра ограждения в проекте. \nХотите удалить все спецификации металлических конструкций?", "Внимание!", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        {
+                            foreach (var view in MetalRolling_ViewSchedules)
+                            {
+                                doc.Delete(view.Id);
+                            }
+                            // user clicked yes
+                        }
+                        else
+                        {
+                            // user clicked no
+                            return Result.Failed;
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Не найдено ни одного экземпляра ограждения в проекте", "Внимание!");
+                        return Result.Failed;
+                    }
+                }
+                //
+
                 // Проверка на отсутствие значение у параметра "Описание"
                 List<string> wrongFences = new List<string>();
                 foreach (var item in all_Fences_Instances)
                 {
-                    if (item.SuperComponent != null && ((item.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString() == null || (item.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString().Trim() == ""))
+                    if (item.SuperComponent != null && ((item.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString() == null ||
+                        (item.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString().Trim() == ""))
                     {
                         wrongFences.Add((item.SuperComponent as FamilyInstance).Symbol.Name);
                     }
@@ -163,6 +193,7 @@ namespace TrTrestAddin_MK.Commands
                         wrongFences.Add(item.Name);
                     }
                 }
+
                 //Форма для заполнение огр у котроых отсутствует параметр "Описание"
                 Struct_MetalRollingEditingForm editFrm = new Struct_MetalRollingEditingForm(wrongFences);
                 if (wrongFences.Count > 0)
@@ -190,6 +221,7 @@ namespace TrTrestAddin_MK.Commands
                         }
                     }
                 }
+                //
 
                 // Группирую ограждений по параметру "Описание"
                 List<List<FamilyInstance>> fencesInstances_byGroupModel = new List<List<FamilyInstance>>();
@@ -207,50 +239,51 @@ namespace TrTrestAddin_MK.Commands
                         fencesInstances_byGroupModel[nestedListIndex].Add(all_Fences_Instances[i]);
                 }
 
-                // Получаю все экземпляры спецификаций в проекте (нужен для дальнешей обработки)
-                List<ViewSchedule> ViewSchedules = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Schedules).WhereElementIsNotElementType().Cast<ViewSchedule>().ToList();
-                ////
                 #endregion
 
                 //// Начинаю Создание спецификации
+                #region Начало
                 foreach (List<FamilyInstance> item in fencesInstances_byGroupModel)
                 {
                     List<FamilyInstance> fencesInstances = item;
                     string vs_Name = "";
                     string modelGroupValue = "";
-                    // Проверка на существование многоуровневых ограждений                    
-                    if (fencesInstances[0].SuperComponent != null)
-                    {
-                        fencesInstances = fencesInstances.Select(fam => fam.SuperComponent).Cast<FamilyInstance>().ToList();
-                        vs_Name = "О_" + fencesInstances[0].Symbol.LookupParameter("Описание").AsValueString() + "_#";
-                        modelGroupValue = fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString();
-                        // Сортировка ограждений по "ADSK_Марка"
-                        List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
-                        fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
-                        fencesInstances = fencesInstances.Select(fam => doc.GetElement(fam.GetSubComponentIds().FirstOrDefault())).Cast<FamilyInstance>().ToList(); // Получено
-                    }
-                    else
-                    {
-                        vs_Name = "О_" + fencesInstances[0].Symbol.LookupParameter("Описание").AsValueString() + "_#";
-                        modelGroupValue = fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString();
-                        // Сортировка ограждений по "ADSK_Марка"
-                        List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
-                        fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
-                    }
 
-                    // Удаление ненужных спецификаций 
-                    if (fencesInstances.Count == 0)
-                    {
-                        foreach (var view in ViewSchedules)
-                        {
-                            if (view.IsValidObject == true && view.Name.Contains(vs_Name))
-                                doc.Delete(view.Id);
-                        }
-                    }
+
+                    //// Удаление ненужных спецификаций 
+                    //if (fencesInstances.Count == 0)
+                    //{
+                    //    foreach (var view in ViewSchedules)
+                    //    {
+                    //        if (view.IsValidObject == true && view.Name.Contains(vs_Name))
+                    //            doc.Delete(view.Id);
+                    //    }
+                    //}
 
 
                     if (fencesInstances.Count != 0)
                     {
+                        // Проверка на существование многоуровневых ограждений                    
+                        if (fencesInstances[0].SuperComponent != null)
+                        {
+                            fencesInstances = fencesInstances.Select(fam => fam.SuperComponent).Cast<FamilyInstance>().ToList();
+                            vs_Name = "О_" + fencesInstances[0].Symbol.LookupParameter("Описание").AsValueString() + "_#";
+                            modelGroupValue = fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString();
+                            // Сортировка ограждений по "ADSK_Марка"
+                            List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
+                            fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
+                            fencesInstances = fencesInstances.Select(fam => doc.GetElement(fam.GetSubComponentIds().FirstOrDefault())).Cast<FamilyInstance>().ToList(); // Получено
+                        }
+                        else
+                        {
+                            vs_Name = "О_" + fencesInstances[0].Symbol.LookupParameter("Описание").AsValueString() + "_#";
+                            modelGroupValue = fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString();
+                            // Сортировка ограждений по "ADSK_Марка"
+                            List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
+                            fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
+                        }
+
+
                         // Получаю размер строков массива
                         #region Получаю размер строков массива для Ограждений
 
@@ -301,11 +334,12 @@ namespace TrTrestAddin_MK.Commands
                             ListOfArrays_Arr_mat_and_mat_Oboznach, vs_Name, modelGroupValue, doc);
 
                         #endregion
-                    }
+                    } // else msgbx return
                 }
                 ////
+                #endregion
 
-                TaskDialog.Show("Внимание!", "Успешно");
+                MessageBox.Show("Успешно!", "Внимание!");
                 tx.Commit();
             }
             #endregion
