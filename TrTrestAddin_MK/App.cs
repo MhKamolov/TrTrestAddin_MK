@@ -37,7 +37,7 @@ namespace TrTrestAddin_MK
             RibbonPanel KR_panel = a.CreateRibbonPanel(tabName, "КР");
 
             // creating the buttons 
-            PushButtonData metallRolling = new PushButtonData("Metall_Rolling", "Металлопрокат", Assembly.GetExecutingAssembly().Location, typeof(Struct_MetalRolling).FullName);
+            PushButtonData metallRolling = new PushButtonData("Metall_Rolling", "Металлопрокат", Assembly.GetExecutingAssembly().Location, typeof(StructMetalRolling).FullName);
             metallRolling.ToolTip = "Металлопрокат";
             PushButton metallRollingBtn = KR_panel.AddItem(metallRolling) as PushButton;
 

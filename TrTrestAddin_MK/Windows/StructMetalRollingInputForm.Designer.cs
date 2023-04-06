@@ -1,6 +1,6 @@
 ﻿namespace TrTrestAddin_MK.Windows
 {
-    partial class Struct_MetalRollingInputForm
+    partial class StructMetalRollingInputForm
     {
         /// <summary>
         /// Required designer variable.
@@ -93,7 +93,7 @@
             0,
             0});
             // 
-            // Struct_MetalRollingInputForm
+            // StructMetalRollingInputForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -103,7 +103,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.Close);
             this.Controls.Add(this.OK);
-            this.Name = "Struct_MetalRollingInputForm";
+            this.Name = "StructMetalRollingInputForm";
             this.Text = "Ввод значение";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Struct_MetalRollingForm_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();

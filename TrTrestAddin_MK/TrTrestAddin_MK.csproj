@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="App.cs" />
     <Compile Include="Command.cs" />
+    <Compile Include="Commands\StructMetalRolling.cs" />
     <Compile Include="Commands\Test.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -71,21 +72,20 @@
     <Compile Include="Windows\AR_RoomDecorationForm.Designer.cs">
       <DependentUpon>AR_RoomDecorationForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Commands\Struct_MetalRolling.cs" />
     <Compile Include="Commands\AR_RoomDecoration.cs" />
     <Compile Include="MoreLinq\MoreEnumerable.DistinctBy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Windows\Struct_MetalRollingEditingForm.cs">
+    <Compile Include="Windows\StructMetalRollingEditingForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Windows\Struct_MetalRollingEditingForm.Designer.cs">
-      <DependentUpon>Struct_MetalRollingEditingForm.cs</DependentUpon>
+    <Compile Include="Windows\StructMetalRollingEditingForm.Designer.cs">
+      <DependentUpon>StructMetalRollingEditingForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Windows\Struct_MetalRollingInputForm.cs">
+    <Compile Include="Windows\StructMetalRollingInputForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Windows\Struct_MetalRollingInputForm.Designer.cs">
-      <DependentUpon>Struct_MetalRollingInputForm.cs</DependentUpon>
+    <Compile Include="Windows\StructMetalRollingInputForm.Designer.cs">
+      <DependentUpon>StructMetalRollingInputForm.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -102,11 +102,11 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="Windows\Struct_MetalRollingEditingForm.resx">
-      <DependentUpon>Struct_MetalRollingEditingForm.cs</DependentUpon>
+    <EmbeddedResource Include="Windows\StructMetalRollingEditingForm.resx">
+      <DependentUpon>StructMetalRollingEditingForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Windows\Struct_MetalRollingInputForm.resx">
-      <DependentUpon>Struct_MetalRollingInputForm.cs</DependentUpon>
+    <EmbeddedResource Include="Windows\StructMetalRollingInputForm.resx">
+      <DependentUpon>StructMetalRollingInputForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup />
