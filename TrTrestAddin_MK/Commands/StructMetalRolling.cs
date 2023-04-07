@@ -12,10 +12,7 @@ using System.Windows.Forms;
 
 namespace TrTrestAddin_MK.Commands
 {
-    /*                                  Начать c:   
-                                      27 - задачой   
-
-    -                                   Задачи
+    /*  -                                   Задачи
         * 1. Заполнить аттрибутов "ADSK_Количества" и "ADSK_Масса" и "Наименование"   -> Выполнена 
         * 2. Управлять количество столбцов во время создания, путем преждевременное измерение их количества и поправки, т.е. добавление в случае < Matrix.Length(1) и удаление в случае > Matrix.Getlentgh(1)
                -> Выполнена
@@ -51,24 +48,19 @@ namespace TrTrestAddin_MK.Commands
         * 25. Динамическое создание новых спецификаций, для любых (новых) семейств ограждений, а не только определенных (как сейчас)
                 Сделать отдельных спецификаций если ограждений кровли имееют разную "Описание" (как будто это другие ограждений на уровне лоджий, поручень и т.д.) -> 
         * 26. Имя спецификации по регламенту (Ренат) - Выполнено
-        * 27. - Отчет по типовым ошибкам -
-        * 28. - Сделать переменные для lookupParameter, потому, что название параметров могут в будущем изменятся -
-        * 39. Вопросы - обсудить
+        * 27. Отчет по типовым ошибкам - Выполнено
+        * 28. Сделать переменные для lookupParameter, потому, что название параметров могут в будущем изменятся - Выполнено
 
-        *- Если проект прошел все тесты :
-
-        * Найти все недоработанные моменты и доработать, искать в комментах 
-        * Code Refactoring (Ссылька на вопрос #4)
-        * Закоментить все, чтобы другие разрабы разбирались в данном коде 
+        * Если проект прошел все тесты :  - Выполнено
+            * Найти все недоработанные моменты и доработать, искать в комментах - Выполнено 
+            * Code Refactoring - Выполнено
+            * Закоментить все, чтобы другие разрабы разбирались в данном коде - Выполнено
 
     ##################################################################################################################################################################################################
 
-                                              Вопросы 
-        * 1. Уточнить момент с различными спецификациями, и необходимости ручного регулирование их контента (все что ниже основной заголовки)?
-        * 2. Обсудить эффективность параметров по каторым делается проверка, выборка и т.д.
 
 
-     -                        Добавленные фичи и изменение (решенные задачи и вопросы)
+                       Добавленные фичи и изменение (решенные задачи)
          *                                28.11
            1 задача
            2 задача
@@ -116,6 +108,10 @@ namespace TrTrestAddin_MK.Commands
            25 задача
                                           04.04
            26 задача
+                                          07.04
+           27 задача
+           28 задача
+                                      ПРОЕКТ ЗАВЕРШЕН
         */
 
 
@@ -127,6 +123,39 @@ namespace TrTrestAddin_MK.Commands
             UIApplication uiapp = commandData.Application;
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
+
+            #region Все используемые параметры и значения - Если название параметра изменяются, то подправить их ниже
+            // LookUpParameter()
+            string opisaniye = "Описание";
+            string ADSK_NaznacheniyeVida = "ADSK_Назначение вида";
+            string ADSK_GruppaModeli = "Группа модели";
+            string ADSK_Marka = "ADSK_Марка";
+            string ADSK_PozitsiyaVedEl = "ADSK_Позиция ведомость элементов";
+            string ADSK_Naimenovaniye = "ADSK_Наименование";
+            string ADSK_NaimenovaniyeKratk = "ADSK_Наименование краткое";
+            string ADSK_RazmerDiametr = "ADSK_Размер_Диаметр";
+            string ADSK_RazmerDlina = "ADSK_Размер_Длина";
+            string sostoyaniyePostavki = "Состояние поставки";
+            string ADSK_DiametrArmaturi = "ADSK_Диаметр арматуры";
+            string klassArmaturi = "Класс арматуры";
+            string ADSK_Oboznacheniye = "ADSK_Обозначение";
+            string secheniyeTrubi = "Сечение трубы";
+            string secheniyeUgolka = "Сечение уголка";
+            string secheniyeProfilya = "Сечение профиля";
+            string secheniyePolosi = "Сечение полосы";
+            string tochnostProkatki = "Точность прокатки";
+            string klassSerpovidnosti = "Класс серповидности";
+            string ADSK_Material = "ADSK_Материал";
+            string ADSK_MaterialNaimen = "ADSK_Материал наименование";
+            string ADSK_MaterialOboznach = "ADSK_Материал обозначение";
+            string ADSK_Massa = "ADSK_Масса";
+            string ADSK_Kolichestvo = "ADSK_Количество";
+            // AsValueString()
+            string asVal_MetallicheskiyeKostr = "Металлические конструкции";
+            string asVal_BoltAnkerniy = "Болт анкерный";
+            string asVal_ProkatArmaturniy = "Прокат арматурный для железобетонных конструкций";
+            #endregion
+
             // Вызываю Форму
             StructMetalRollingInputForm inputFrm = new StructMetalRollingInputForm();
             inputFrm.ShowDialog();
@@ -140,18 +169,15 @@ namespace TrTrestAddin_MK.Commands
             {
                 tx.Start("Transaction Name");
 
-                //// Подготовка
                 #region Подготовка
                 // Получаю экземпляры все ограждений в проекте
-
                 List<FamilyInstance> allFencesInstances = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsNotElementType()
-                 .Cast<FamilyInstance>().OrderBy(fam => fam.Symbol.LookupParameter("Описание").AsValueString()).ToList();
+                 .Cast<FamilyInstance>().OrderBy(fam => fam.Symbol.LookupParameter(opisaniye).AsValueString()).ToList();
 
                 // Получаю все экземпляры спецификаций в проекте (нужен для дальнешей обработки)
-
                 List<ViewSchedule> viewSchedules = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Schedules).WhereElementIsNotElementType().
-                    Where(v => v.LookupParameter("ADSK_Назначение вида") != null).Cast<ViewSchedule>().ToList();
-                List<ViewSchedule> metalRollingViewSchedules = viewSchedules.Where(v => v.LookupParameter("ADSK_Назначение вида").AsValueString() == "Металлические конструкции").ToList();
+                    Where(v => v.LookupParameter(ADSK_NaznacheniyeVida) != null).Cast<ViewSchedule>().ToList();
+                List<ViewSchedule> metalRollingViewSchedules = viewSchedules.Where(v => v.LookupParameter(ADSK_NaznacheniyeVida).AsValueString() == asVal_MetallicheskiyeKostr).ToList();
 
 
                 // Удаление ненужных спецификаций (выборочное)
@@ -159,8 +185,8 @@ namespace TrTrestAddin_MK.Commands
                 {
                     if (metalRollingViewSchedules.Count != 0)
                     {
-                        var leftFences = allFencesInstances.Select(fam => fam.SuperComponent == null ? fam.Symbol.LookupParameter("Описание").AsValueString() :
-                        (fam.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString()).Distinct().ToList(); // для уменьшение объема данных
+                        var leftFences = allFencesInstances.Select(fam => fam.SuperComponent == null ? fam.Symbol.LookupParameter(opisaniye).AsValueString() :
+                        (fam.SuperComponent as FamilyInstance).Symbol.LookupParameter(opisaniye).AsValueString()).Distinct().ToList(); // для уменьшение объема данных
                         var result = metalRollingViewSchedules.Where(v => !leftFences.Any(s => v.Name.Contains(s))).ToList();
                         foreach (var view in result)
                         {
@@ -195,22 +221,22 @@ namespace TrTrestAddin_MK.Commands
                 }
                 //
 
-                // Проверка на отсутствие значение у параметра "Описание"
+                // Проверка на отсутствие значение у параметра opisaniye
                 List<string> wrongFences = new List<string>();
                 foreach (var item in allFencesInstances)
                 {
-                    if (item.SuperComponent != null && ((item.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString() == null ||
-                        (item.SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").AsValueString().Trim() == ""))
+                    if (item.SuperComponent != null && ((item.SuperComponent as FamilyInstance).Symbol.LookupParameter(opisaniye).AsValueString() == null ||
+                        (item.SuperComponent as FamilyInstance).Symbol.LookupParameter(opisaniye).AsValueString().Trim() == ""))
                     {
                         wrongFences.Add((item.SuperComponent as FamilyInstance).Symbol.Name);
                     }
-                    if (item.SuperComponent == null && (item.Symbol.LookupParameter("Описание").AsValueString() == null || item.Symbol.LookupParameter("Описание").AsValueString().Trim() == ""))
+                    if (item.SuperComponent == null && (item.Symbol.LookupParameter(opisaniye).AsValueString() == null || item.Symbol.LookupParameter(opisaniye).AsValueString().Trim() == ""))
                     {
                         wrongFences.Add(item.Name);
                     }
                 }
 
-                //Форма для заполнение огр у котроых отсутствует параметр "Описание"
+                //Форма для заполнение ограждений у котрых отсутствует параметр opisaniye 
                 StructMetalRollingEditingForm editFrm = new StructMetalRollingEditingForm(wrongFences);
                 if (wrongFences.Count > 0)
                 {
@@ -226,12 +252,12 @@ namespace TrTrestAddin_MK.Commands
                         {
                             if (allFencesInstances[i].SuperComponent == null && allFencesInstances[i].Symbol.Name == editFrm.fencesNames[j])
                             {
-                                allFencesInstances[i].Symbol.LookupParameter("Описание").Set(editFrm.fencesDescriptions[j]);
+                                allFencesInstances[i].Symbol.LookupParameter(opisaniye).Set(editFrm.fencesDescriptions[j]);
                                 break;
                             }
                             if (allFencesInstances[i].SuperComponent != null && (allFencesInstances[i].SuperComponent as FamilyInstance).Symbol.Name == editFrm.fencesNames[j])
                             {
-                                (allFencesInstances[i].SuperComponent as FamilyInstance).Symbol.LookupParameter("Описание").Set(editFrm.fencesDescriptions[j]);
+                                (allFencesInstances[i].SuperComponent as FamilyInstance).Symbol.LookupParameter(opisaniye).Set(editFrm.fencesDescriptions[j]);
                                 break;
                             }
                         }
@@ -239,13 +265,13 @@ namespace TrTrestAddin_MK.Commands
                 }
                 //
 
-                // Группирую ограждений по параметру "Описание"
+                // Группирую ограждений по параметру opisaniye 
                 List<List<FamilyInstance>> fencesInstancesByGroupModel = new List<List<FamilyInstance>>();
                 fencesInstancesByGroupModel.Add(new List<FamilyInstance>());
                 int nestedListIndex = 0;
                 for (int i = 0; i < allFencesInstances.Count; i++)
                 {
-                    if (i != 0 && (allFencesInstances[i].Symbol.LookupParameter("Описание").AsValueString() != allFencesInstances[i - 1].Symbol.LookupParameter("Описание").AsValueString()))
+                    if (i != 0 && (allFencesInstances[i].Symbol.LookupParameter(opisaniye).AsValueString() != allFencesInstances[i - 1].Symbol.LookupParameter(opisaniye).AsValueString()))
                     {
                         fencesInstancesByGroupModel.Add(new List<FamilyInstance>());
                         nestedListIndex++;
@@ -254,11 +280,10 @@ namespace TrTrestAddin_MK.Commands
                     else
                         fencesInstancesByGroupModel[nestedListIndex].Add(allFencesInstances[i]);
                 }
-
                 #endregion
 
-                //// Начинаю Создание спецификации
-                #region Начало
+
+                #region Начинаю Создание спецификации
                 foreach (List<FamilyInstance> item in fencesInstancesByGroupModel)
                 {
                     List<FamilyInstance> fencesInstances = item;
@@ -271,20 +296,20 @@ namespace TrTrestAddin_MK.Commands
                         if (fencesInstances[0].SuperComponent != null)
                         {
                             fencesInstances = fencesInstances.Select(fam => fam.SuperComponent).Cast<FamilyInstance>().ToList();
-                            vsName = "О_" + fencesInstances[0].Symbol.LookupParameter("Описание").AsValueString() + "_#";
-                            modelGroupValue = fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString();
-                            // Сортировка ограждений по "ADSK_Марка"
-                            List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
-                            fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
+                            vsName = "О_" + fencesInstances[0].Symbol.LookupParameter(opisaniye).AsValueString() + "_#";
+                            modelGroupValue = fencesInstances[0].Symbol.LookupParameter(ADSK_GruppaModeli).AsValueString();
+                            // Сортировка ограждений по ADSK_Marka
+                            List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter(ADSK_Marka).AsValueString()).ToList());
+                            fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter(ADSK_Marka).AsValueString())).ToList(); // Получаю отсортированных ограждений
                             fencesInstances = fencesInstances.Select(fam => doc.GetElement(fam.GetSubComponentIds().FirstOrDefault())).Cast<FamilyInstance>().ToList(); // Получено
                         }
                         else
                         {
-                            vsName = "О_" + fencesInstances[0].Symbol.LookupParameter("Описание").AsValueString() + "_#";
-                            modelGroupValue = fencesInstances[0].Symbol.LookupParameter("Группа модели").AsValueString();
-                            // Сортировка ограждений по "ADSK_Марка"
-                            List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList());
-                            fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter("ADSK_Марка").AsValueString())).ToList(); // Получаю отсортированных ограждений
+                            vsName = "О_" + fencesInstances[0].Symbol.LookupParameter(opisaniye).AsValueString() + "_#";
+                            modelGroupValue = fencesInstances[0].Symbol.LookupParameter(ADSK_GruppaModeli).AsValueString();
+                            // Сортировка ограждений по ADSK_Marka
+                            List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter(ADSK_Marka).AsValueString()).ToList());
+                            fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter(ADSK_Marka).AsValueString())).ToList(); // Получаю отсортированных ограждений
                         }
 
 
@@ -294,14 +319,13 @@ namespace TrTrestAddin_MK.Commands
                         List<List<FamilyInstance>> listofList_FencesExamplesDistinct = new List<List<FamilyInstance>>(); // Список из несколько списков по 8-образцовых экземпляров лоджий
                         List<int> listOf_MatrixRowCount = new List<int>(); // Для получение количество строк массивов
                         bool resultFailed = false;
-                        RowCountDeterMine(doc, fencesInstances, ref listofList_FencesExamplesDistinct, ref listOf_MatrixRowCount, scheduleHeight, ref resultFailed);
+                        RowCountDeterMine(doc, fencesInstances, ref listofList_FencesExamplesDistinct, ref listOf_MatrixRowCount, scheduleHeight, ref resultFailed, ADSK_Marka, ADSK_PozitsiyaVedEl);
                         if (resultFailed)
                             return Result.Failed;
                         #endregion
 
 
                         #region Объявляю массив с определеннымы размерамы
-
 
                         // Массив огр. лоджий
                         List<string[,]> ListOfMatrixes = new List<string[,]>(); // Список массивов Лоджий - несколько массивов потому что несколько спецификации (каждый по 8-образцовых ограждений)
@@ -313,13 +337,14 @@ namespace TrTrestAddin_MK.Commands
                         #endregion
 
 
-                        #region Создаю вложенный список, для обработки данных, чтобы потом поставить в массив и добавляю суммарники для "ADSK_Количества" и "ADSK_Масса" 
+                        #region Создаю вложенный список, для обработки данных, чтобы потом поставить в массив и добавляю суммарники для "ADSK_Количества" и ADSK_Massa 
 
 
                         List<List<List<FamilyInstance>>> ListOfListsOfLists_fencesExamples = new List<List<List<FamilyInstance>>>(); // Конечный список обрабативаемых данных - далее массив будет заполнятся именно по этому списку
                         List<List<List<int>>> ListOfListsOfLists_FExamples_eachDetail_Amount = new List<List<List<int>>>(); // Для поле "Количество" (Количество каждый сост-элемент ограждений)
                         List<List<double>> ListOfLists_FExamples_Weight_Amount = new List<List<double>>(); // Для поле "Масса изделия" (Сумма масс сост-элементов ограждений)
-                        BeforeArray2DFilling(listofList_FencesExamplesDistinct, ref ListOfListsOfLists_fencesExamples, ref ListOfListsOfLists_FExamples_eachDetail_Amount, ref ListOfLists_FExamples_Weight_Amount, doc);
+                        BeforeArray2DFilling(listofList_FencesExamplesDistinct, ref ListOfListsOfLists_fencesExamples, ref ListOfListsOfLists_FExamples_eachDetail_Amount, ref ListOfLists_FExamples_Weight_Amount, doc,
+                            ADSK_Naimenovaniye, asVal_BoltAnkerniy, ADSK_Massa, ADSK_Kolichestvo, ADSK_PozitsiyaVedEl);
 
                         #endregion
 
@@ -327,7 +352,10 @@ namespace TrTrestAddin_MK.Commands
                         #region Собираю все в массив, чтобы потом поставить в заголовку (как таблица) 
 
                         PutAllAtArray2d(ListOfListsOfLists_fencesExamples, listofList_FencesExamplesDistinct, ListOfMatrixes, ListOfListsOfLists_FExamples_eachDetail_Amount, ListOfLists_FExamples_Weight_Amount,
-                            ListOfArrays_Arr_sech_prof_and_oboznach, ListOfArrays_Arr_mat_and_mat_Oboznach, doc);
+                            ListOfArrays_Arr_sech_prof_and_oboznach, ListOfArrays_Arr_mat_and_mat_Oboznach, doc,
+                             ADSK_Naimenovaniye, asVal_BoltAnkerniy, ADSK_Marka, ADSK_PozitsiyaVedEl, ADSK_NaimenovaniyeKratk, ADSK_RazmerDiametr, ADSK_RazmerDlina,
+                             asVal_ProkatArmaturniy, sostoyaniyePostavki, ADSK_DiametrArmaturi, klassArmaturi, ADSK_Massa, ADSK_Oboznacheniye, secheniyeTrubi, secheniyeUgolka,
+                             secheniyeProfilya, secheniyePolosi, tochnostProkatki, klassSerpovidnosti, ADSK_Material, ADSK_MaterialNaimen, ADSK_MaterialOboznach);
 
                         #endregion
 
@@ -335,7 +363,7 @@ namespace TrTrestAddin_MK.Commands
                         #region Этап поставки в заголовке
                         bool resultFailed_2 = false;
                         PutAtTableHeader(ListOfListsOfLists_fencesExamples, allFencesInstances, viewSchedules, ListOfMatrixes, ListOfArrays_Arr_sech_prof_and_oboznach,
-                            ListOfArrays_Arr_mat_and_mat_Oboznach, vsName, modelGroupValue, doc, ref resultFailed_2);
+                            ListOfArrays_Arr_mat_and_mat_Oboznach, vsName, modelGroupValue, doc, ref resultFailed_2, ADSK_NaznacheniyeVida);
                         if (resultFailed)
                             return Result.Failed;
                         #endregion
@@ -353,18 +381,18 @@ namespace TrTrestAddin_MK.Commands
         }
 
         static void RowCountDeterMine(Document doc, List<FamilyInstance> allFencesInstances, ref List<List<FamilyInstance>> listofList_FencesExamplesDistinct,
-            ref List<int> listOf_MatrixRowCount, int scheduleHeight, ref bool resultFailed)
+            ref List<int> listOf_MatrixRowCount, int scheduleHeight, ref bool resultFailed, string ADSK_Marka, string ADSK_PozitsiyaVedEl)
         {
             List<FamilyInstance> fencesExamplesDistinct = new List<FamilyInstance>();
             // Получаю образцовые ограждений, с каждого типа (путем удаления похожих экземпляров)
 
             if (allFencesInstances.FirstOrDefault().SuperComponent != null)
             {
-                fencesExamplesDistinct = allFencesInstances.DistinctBy(fam => (fam.SuperComponent as FamilyInstance).Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList(); // если огр. "Мет-решетка" (она 3-х уровеневая, а все другие 2-х уровневые)
+                fencesExamplesDistinct = allFencesInstances.DistinctBy(fam => (fam.SuperComponent as FamilyInstance).Symbol.LookupParameter(ADSK_Marka).AsValueString()).ToList(); // если огр. "Мет-решетка" (она 3-х уровеневая, а все другие 2-х уровневые)
             }
             else
             {
-                fencesExamplesDistinct = allFencesInstances.DistinctBy(fam => fam.Symbol.LookupParameter("ADSK_Марка").AsValueString()).ToList(); // если обычные огр.
+                fencesExamplesDistinct = allFencesInstances.DistinctBy(fam => fam.Symbol.LookupParameter(ADSK_Marka).AsValueString()).ToList(); // если обычные огр.
             }
             //
 
@@ -374,7 +402,7 @@ namespace TrTrestAddin_MK.Commands
             List<int> rowCounts = new List<int>();
             foreach (var item in fencesExamplesDistinct)
             {
-                rowCounts.Add(item.GetSubComponentIds().Select(elId => doc.GetElement(elId) as FamilyInstance).DistinctBy(fam => fam.LookupParameter("ADSK_Позиция ведомость элементов").AsValueString()).Count());
+                rowCounts.Add(item.GetSubComponentIds().Select(elId => doc.GetElement(elId) as FamilyInstance).DistinctBy(fam => fam.LookupParameter(ADSK_PozitsiyaVedEl).AsValueString()).Count());
             }
 
             int counter = 0;
@@ -418,7 +446,7 @@ namespace TrTrestAddin_MK.Commands
                     {
                         Test.Add(doc.GetElement(item_3) as FamilyInstance); // Получаю каждый составляющий элемент, пока для определение количество строк массива
                     }
-                    MatrixRowCount += Test.DistinctBy(fam => fam.LookupParameter("ADSK_Позиция ведомость элементов").AsValueString()).Count();
+                    MatrixRowCount += Test.DistinctBy(fam => fam.LookupParameter(ADSK_PozitsiyaVedEl).AsValueString()).Count();
                 }
                 listOf_MatrixRowCount.Add(MatrixRowCount); // Количество строк получено
             }
@@ -439,7 +467,7 @@ namespace TrTrestAddin_MK.Commands
 
         static void BeforeArray2DFilling(List<List<FamilyInstance>> listofList_FencesExamplesDistinct,
             ref List<List<List<FamilyInstance>>> ListOfListsOfLists_fencesExamples, ref List<List<List<int>>> ListOfListsOfLists_FExamplesEachDetailAmount,
-            ref List<List<double>> ListOfLists_FExamplesWeightAmount, Document doc)
+            ref List<List<double>> ListOfLists_FExamplesWeightAmount, Document doc, string ADSK_Naimenovaniye, string asVal_BoltAnkerniy, string ADSK_Massa, string ADSK_Kolichestvo, string ADSK_PozitsiyaVedEl)
         {
             for (int k = 0; k < listofList_FencesExamplesDistinct.Count; k++)
             {
@@ -458,30 +486,30 @@ namespace TrTrestAddin_MK.Commands
                         FamilyInstance fam = doc.GetElement(item) as FamilyInstance;
 
                         famList.Add(fam); // Все составляющие элементы одной ограждений
-                        if (fam.Symbol.LookupParameter("ADSK_Наименование").AsValueString() != "Болт анкерный")
+                        if (fam.Symbol.LookupParameter(ADSK_Naimenovaniye).AsValueString() != asVal_BoltAnkerniy)
                         {
-                            FExamplesWeightCounter += fam.LookupParameter("ADSK_Масса").AsDouble();
+                            FExamplesWeightCounter += fam.LookupParameter(ADSK_Massa).AsDouble();
                         }
                     }
-                    // Удаляю из Ограждения сост-элемент у которого параметр "ADSK_Количество" = 0 (нужно для столбца "Кол.")
+                    // Удаляю из Ограждения сост-элемент у которого параметр ADSK_Kolichestvo = 0 (нужно для столбца "Кол.")
                     for (int n = 0; n < famList.Count; n++)
                     {
                         foreach (Parameter item in famList[n].Parameters)
                         {
-                            if (item.Definition.Name == "ADSK_Количество" && item.AsDouble() == 0)
+                            if (item.Definition.Name == ADSK_Kolichestvo && item.AsDouble() == 0)
                             {
                                 famList.RemoveAt(n);
                                 break;
                             }
                         }
                     }
-                    // Получаю список сост-элементов DistinctBy "ADSK_Позиция ведомость элементов"
-                    ListofLists_fencesExamples[i] = famList.DistinctBy(elem => elem.LookupParameter("ADSK_Позиция ведомость элементов").AsValueString()).ToList();
-                    List<string> sorted_stringList = listSort(ListofLists_fencesExamples[i].Select(x => x.LookupParameter("ADSK_Позиция ведомость элементов").AsValueString()).ToList()); // Сортирую список
-                    ListofLists_fencesExamples[i] = ListofLists_fencesExamples[i].OrderBy(x => sorted_stringList.IndexOf(x.LookupParameter("ADSK_Позиция ведомость элементов").AsValueString())).ToList(); // Получено
+                    // Получаю список сост-элементов DistinctBy ADSK_PozitsiyaVedEl
+                    ListofLists_fencesExamples[i] = famList.DistinctBy(elem => elem.LookupParameter(ADSK_PozitsiyaVedEl).AsValueString()).ToList();
+                    List<string> sorted_stringList = listSort(ListofLists_fencesExamples[i].Select(x => x.LookupParameter(ADSK_PozitsiyaVedEl).AsValueString()).ToList()); // Сортирую список
+                    ListofLists_fencesExamples[i] = ListofLists_fencesExamples[i].OrderBy(x => sorted_stringList.IndexOf(x.LookupParameter(ADSK_PozitsiyaVedEl).AsValueString())).ToList(); // Получено
 
                     // Получаю Количество каждый сост-элемент
-                    List<string> strList = famList.Select(fam => fam.LookupParameter("ADSK_Позиция ведомость элементов").AsValueString()).ToList(); // без DistinctBy                                                        
+                    List<string> strList = famList.Select(fam => fam.LookupParameter(ADSK_PozitsiyaVedEl).AsValueString()).ToList(); // без DistinctBy                                                        
                     strList = listSort(strList); // Сортирую этот же список
                     ListofLists_FExamplesEachDetailAmount[i] = strList.GroupBy(x => x).Where(g => g.Count() > 0).Select(x => x.Count()).ToList(); // Получено
 
@@ -499,7 +527,10 @@ namespace TrTrestAddin_MK.Commands
 
         static void PutAllAtArray2d(List<List<List<FamilyInstance>>> ListOfListsOfLists_fencesExamples, List<List<FamilyInstance>> listofList_FencesExamplesDistinct, List<string[,]> ListOfMatrixes,
             List<List<List<int>>> ListOfListsOfLists_FExamplesEachDetailAmount, List<List<double>> ListOfLists_FExamplesWeightAmount,
-            List<string[]> ListOfArrays_Arr_sech_prof_and_oboznach, List<string[]> ListOfArrays_Arr_mat_and_mat_Oboznach, Document doc)
+            List<string[]> ListOfArrays_Arr_sech_prof_and_oboznach, List<string[]> ListOfArrays_Arr_mat_and_mat_Oboznach, Document doc,
+            string ADSK_Naimenovaniye, string asVal_BoltAnkerniy, string ADSK_Marka, string ADSK_PozitsiyaVedEl, string ADSK_NaimenovaniyeKratk, string ADSK_RazmerDiametr, string ADSK_RazmerDlina,
+            string asVal_ProkatArmaturniy, string sostoyaniyePostavki, string ADSK_DiametrArmaturi, string klassArmaturi, string ADSK_Massa, string ADSK_Oboznacheniye, string secheniyeTrubi, string secheniyeUgolka,
+            string secheniyeProfilya, string secheniyePolosi, string tochnostProkatki, string klassSerpovidnosti, string ADSK_Material, string ADSK_MaterialNaimen, string ADSK_MaterialOboznach)
         {
             List<Material> Materials = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Materials).Cast<Material>().ToList();
             for (int k = 0; k < ListOfListsOfLists_fencesExamples.Count; k++)
@@ -512,18 +543,18 @@ namespace TrTrestAddin_MK.Commands
                     {
                         for (int i = 0; i < ListOfListsOfLists_fencesExamples[k][p].Count; i++) // i - как строка массива 
                         {
-                            switch (ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter("ADSK_Наименование").AsValueString())
+                            switch (ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter(ADSK_Naimenovaniye).AsValueString())
                             {
                                 case "Болт анкерный":
-                                    ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter("ADSK_Марка").AsValueString();
+                                    ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter(ADSK_Marka).AsValueString();
 
-                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Позиция ведомость элементов").AsValueString();
+                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_PozitsiyaVedEl).AsValueString();
 
                                     //
                                     // Наименование подготовка начало
-                                    string str_naim_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                    string str_Diametr_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Размер_Диаметр").AsValueString();
-                                    string str_Dlina_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Размер_Длина").AsValueString();
+                                    string str_naim_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                    string str_Diametr_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_RazmerDiametr).AsValueString();
+                                    string str_Dlina_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_RazmerDlina).AsValueString();
                                     // Наименование подготовка конец
 
                                     ListOfMatrixes[k][i, 2] = str_naim_Ank_Bolt + "  " + str_Diametr_Ank_Bolt + "x" + str_Dlina_Ank_Bolt;
@@ -539,18 +570,18 @@ namespace TrTrestAddin_MK.Commands
                                     break;
 
                                 case "Прокат арматурный для железобетонных конструкций": // Пруток
-                                    ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter("ADSK_Марка").AsValueString();
+                                    ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter(ADSK_Marka).AsValueString();
 
-                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Позиция ведомость элементов").AsValueString();
+                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_PozitsiyaVedEl).AsValueString();
 
                                     // Наименование подготовка начало
-                                    string str_naim = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                    string str_Sost_postavk = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("Состояние поставки").AsValueString();
-                                    string str_D_test = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Диаметр арматуры").AsValueString();
+                                    string str_naim = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                    string str_Sost_postavk = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(sostoyaniyePostavki).AsValueString();
+                                    string str_D_test = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_DiametrArmaturi).AsValueString();
                                     string str_Diametr = str_D_test.Substring(0, str_D_test.IndexOf(' '));
-                                    string str_Dlina = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Размер_Длина").AsValueString();
-                                    string str_Klass_armatura = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("Класс арматуры").AsValueString();
-                                    string str_Oboznach = ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter("ADSK_Обозначение").AsValueString();
+                                    string str_Dlina = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_RazmerDlina).AsValueString();
+                                    string str_Klass_armatura = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(klassArmaturi).AsValueString();
+                                    string str_Oboznach = ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter(ADSK_Oboznacheniye).AsValueString();
                                     // Наименование подготовка конец
 
                                     ListOfMatrixes[k][i, 2] = str_naim + "  " + str_Sost_postavk + "-" + str_Diametr + "X" + str_Dlina + "-" + str_Klass_armatura + " " + str_Oboznach;
@@ -559,19 +590,19 @@ namespace TrTrestAddin_MK.Commands
 
                                     ListOfMatrixes[k][i, 5] = ListOfListsOfLists_FExamplesEachDetailAmount[k][p][i].ToString();
 
-                                    ListOfMatrixes[k][i, 6] = Math.Round(ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Масса").AsDouble(), 2).ToString();
+                                    ListOfMatrixes[k][i, 6] = Math.Round(ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_Massa).AsDouble(), 2).ToString();
 
                                     ListOfMatrixes[k][i, 7] = Math.Round(ListOfLists_FExamplesWeightAmount[k][p], 2).ToString();
                                     break;
 
                                 default:
-                                    // Проверка если это металлическая решетка (для "ADSK_Марка")
+                                    // Проверка если это металлическая решетка (для ADSK_Marka)
                                     if ((listofList_FencesExamplesDistinct[k][p] as FamilyInstance).SuperComponent != null)
-                                        ListOfMatrixes[k][i, 0] = (listofList_FencesExamplesDistinct[k][p].SuperComponent as FamilyInstance).Symbol.LookupParameter("ADSK_Марка").AsValueString(); // Потому что имеет дополнительный уровень                               
+                                        ListOfMatrixes[k][i, 0] = (listofList_FencesExamplesDistinct[k][p].SuperComponent as FamilyInstance).Symbol.LookupParameter(ADSK_Marka).AsValueString(); // Потому что имеет дополнительный уровень                               
                                     else
-                                        ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter("ADSK_Марка").AsValueString();
+                                        ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter(ADSK_Marka).AsValueString();
                                     // Проверка закончена
-                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Позиция ведомость элементов").AsValueString();
+                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_PozitsiyaVedEl).AsValueString();
 
                                     // Наименование подготовка начало
                                     string str_naim_kratk = "";
@@ -582,38 +613,38 @@ namespace TrTrestAddin_MK.Commands
 
 
                                     // Проверка на типа сост-элемента                           
-                                    switch (ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter("ADSK_Наименование").AsValueString())
+                                    switch (ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter(ADSK_Naimenovaniye).AsValueString())
                                     {
                                         case "Трубы стальные бесшовные горячедеформированные": // Труба О (круглая)
-                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("Сечение трубы").AsValueString();
+                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(secheniyeTrubi).AsValueString();
                                             break;
                                         case "Уголки стальные горячекатанные равнополочные": // Уголок
-                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("Сечение уголка").AsValueString();
+                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(secheniyeUgolka).AsValueString();
                                             break;
                                         case "Трубы стальный профильные для металлоконструкций": // Труба ПК/ПП (не круглая)
-                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("Сечение профиля").AsValueString();
+                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(secheniyeProfilya).AsValueString();
                                             break;
                                         case "Прокат сортовой стальной горячекатанный полосовой": // Полоса
-                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("Сечение полосы").AsValueString() + "-" +
-                                                            ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("Точность прокатки").AsValueString() + "-" +
-                                                            ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("Класс серповидности").AsValueString();
+                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(secheniyePolosi).AsValueString() + "-" +
+                                                            ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(tochnostProkatki).AsValueString() + "-" +
+                                                            ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(klassSerpovidnosti).AsValueString();
                                             break;
                                     }
                                     //
-                                    str_oboznach = ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter("ADSK_Обозначение").AsValueString();
+                                    str_oboznach = ListOfListsOfLists_fencesExamples[k][p][i].Symbol.LookupParameter(ADSK_Oboznacheniye).AsValueString();
                                     foreach (var item in Materials)
                                     {
-                                        if (ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Материал").AsValueString() == item.Name)
+                                        if (ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_Material).AsValueString() == item.Name)
                                         {
-                                            str_mat = item.LookupParameter("ADSK_Материал наименование").AsValueString() + "  " + item.LookupParameter("ADSK_Материал обозначение").AsValueString();
+                                            str_mat = item.LookupParameter(ADSK_MaterialNaimen).AsValueString() + "  " + item.LookupParameter(ADSK_MaterialOboznach).AsValueString();
                                             break;
                                         }
                                     }
-                                    str_dlina = "L=" + ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Размер_Длина").AsValueString() + "мм";
+                                    str_dlina = "L=" + ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_RazmerDlina).AsValueString() + "мм";
                                     string sech_prof_and_oboznach = str_sech_prof + "  " + str_oboznach;
                                     // Наименование подготовка конец
 
@@ -626,7 +657,7 @@ namespace TrTrestAddin_MK.Commands
                                     // 
                                     ListOfMatrixes[k][i, 5] = ListOfListsOfLists_FExamplesEachDetailAmount[k][p][i].ToString();
 
-                                    ListOfMatrixes[k][i, 6] = Math.Round(ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter("ADSK_Масса").AsDouble(), 2).ToString();
+                                    ListOfMatrixes[k][i, 6] = Math.Round(ListOfListsOfLists_fencesExamples[k][p][i].LookupParameter(ADSK_Massa).AsDouble(), 2).ToString();
 
                                     ListOfMatrixes[k][i, 7] = Math.Round(ListOfLists_FExamplesWeightAmount[k][p], 2).ToString();
                                     break;
@@ -642,18 +673,18 @@ namespace TrTrestAddin_MK.Commands
                         int someNumber = 0;
                         for (int i = listCounter; i < listCounter + ListOfListsOfLists_fencesExamples[k][p].Count; i++) // i - как строка массива 
                         {
-                            switch (ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter("ADSK_Наименование").AsValueString())
+                            switch (ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter(ADSK_Naimenovaniye).AsValueString())
                             {
                                 case "Болт анкерный":
-                                    ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter("ADSK_Марка").AsValueString();
+                                    ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter(ADSK_Marka).AsValueString();
 
-                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Позиция ведомость элементов").AsValueString();
+                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_PozitsiyaVedEl).AsValueString();
 
                                     //
                                     // Наименование подготовка начало
-                                    string str_naim_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                    string str_Diametr_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Размер_Диаметр").AsValueString();
-                                    string str_Dlina_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Размер_Длина").AsValueString();
+                                    string str_naim_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                    string str_Diametr_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_RazmerDiametr).AsValueString();
+                                    string str_Dlina_Ank_Bolt = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_RazmerDlina).AsValueString();
                                     // Наименование подготовка конец
 
                                     ListOfMatrixes[k][i, 2] = str_naim_Ank_Bolt + "  " + str_Diametr_Ank_Bolt + "x" + str_Dlina_Ank_Bolt;
@@ -670,18 +701,18 @@ namespace TrTrestAddin_MK.Commands
                                     break;
 
                                 case "Прокат арматурный для железобетонных конструкций": // Пруток
-                                    ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter("ADSK_Марка").AsValueString();
+                                    ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter(ADSK_Marka).AsValueString();
 
-                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Позиция ведомость элементов").AsValueString();
+                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_PozitsiyaVedEl).AsValueString();
 
                                     // Наименование подготовка начало
-                                    string str_naim = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                    string str_Sost_postavk = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("Состояние поставки").AsValueString();
-                                    string str_D_test = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Диаметр арматуры").AsValueString();
+                                    string str_naim = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                    string str_Sost_postavk = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(sostoyaniyePostavki).AsValueString();
+                                    string str_D_test = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_DiametrArmaturi).AsValueString();
                                     string str_Diametr = str_D_test.Substring(0, str_D_test.IndexOf(' '));
-                                    string str_Dlina = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Размер_Длина").AsValueString();
-                                    string str_Klass_armatura = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("Класс арматуры").AsValueString();
-                                    string str_Oboznach = ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter("ADSK_Обозначение").AsValueString();
+                                    string str_Dlina = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_RazmerDlina).AsValueString();
+                                    string str_Klass_armatura = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(klassArmaturi).AsValueString();
+                                    string str_Oboznach = ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter(ADSK_Oboznacheniye).AsValueString();
                                     // Наименование подготовка конец
                                     ListOfMatrixes[k][i, 2] = str_naim + "  " + str_Sost_postavk + "-" + str_Diametr + "X" + str_Dlina + "-" + str_Klass_armatura + " " + str_Oboznach;
                                     ListOfMatrixes[k][i, 3] = str_naim + "  " + str_Sost_postavk + "-" + str_Diametr + "X" + str_Dlina + "-" + str_Klass_armatura + " " + str_Oboznach;
@@ -689,7 +720,7 @@ namespace TrTrestAddin_MK.Commands
 
                                     ListOfMatrixes[k][i, 5] = ListOfListsOfLists_FExamplesEachDetailAmount[k][p][someNumber].ToString();
 
-                                    ListOfMatrixes[k][i, 6] = Math.Round(ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Масса").AsDouble(), 2).ToString();
+                                    ListOfMatrixes[k][i, 6] = Math.Round(ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_Massa).AsDouble(), 2).ToString();
 
                                     ListOfMatrixes[k][i, 7] = Math.Round(ListOfLists_FExamplesWeightAmount[k][p], 2).ToString();
 
@@ -697,14 +728,14 @@ namespace TrTrestAddin_MK.Commands
                                     break;
 
                                 default:
-                                    // Проверка если это металлическая решетка (для "ADSK_Марка")
+                                    // Проверка если это металлическая решетка (для ADSK_Marka)
                                     if ((listofList_FencesExamplesDistinct[k][p] as FamilyInstance).SuperComponent != null)
-                                        ListOfMatrixes[k][i, 0] = (listofList_FencesExamplesDistinct[k][p].SuperComponent as FamilyInstance).Symbol.LookupParameter("ADSK_Марка").AsValueString(); // Потому что имеет дополнительный уровень                               
+                                        ListOfMatrixes[k][i, 0] = (listofList_FencesExamplesDistinct[k][p].SuperComponent as FamilyInstance).Symbol.LookupParameter(ADSK_Marka).AsValueString(); // Потому что имеет дополнительный уровень                               
                                     else
-                                        ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter("ADSK_Марка").AsValueString();
+                                        ListOfMatrixes[k][i, 0] = listofList_FencesExamplesDistinct[k][p].Symbol.LookupParameter(ADSK_Marka).AsValueString();
                                     // Проверка закончена
 
-                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Позиция ведомость элементов").AsValueString();
+                                    ListOfMatrixes[k][i, 1] = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_PozitsiyaVedEl).AsValueString();
 
                                     //// Наименование подготовка начало
                                     string str_naim_kratk = "";
@@ -714,37 +745,37 @@ namespace TrTrestAddin_MK.Commands
                                     string str_dlina = "";
 
                                     //// Проверка на типа сост-элемента                            
-                                    switch (ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter("ADSK_Наименование").AsValueString())
+                                    switch (ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter(ADSK_Naimenovaniye).AsValueString())
                                     {
                                         case "Трубы стальные бесшовные горячедеформированные":
-                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("Сечение трубы").AsValueString();
+                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(secheniyeTrubi).AsValueString();
                                             break;
                                         case "Уголки стальные горячекатанные равнополочные":
-                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("Сечение уголка").AsValueString();
+                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(secheniyeUgolka).AsValueString();
                                             break;
                                         case "Трубы стальный профильные для металлоконструкций":
-                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("Сечение профиля").AsValueString();
+                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(secheniyeProfilya).AsValueString();
                                             break;
                                         case "Прокат сортовой стальной горячекатанный полосовой":
-                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Наименование краткое").AsValueString();
-                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("Сечение полосы").AsValueString() + "-" +
-                                                            ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("Точность прокатки").AsValueString() + "-" +
-                                                            ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("Класс серповидности").AsValueString();
+                                            str_naim_kratk = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_NaimenovaniyeKratk).AsValueString();
+                                            str_sech_prof = ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(secheniyePolosi).AsValueString() + "-" +
+                                                            ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(tochnostProkatki).AsValueString() + "-" +
+                                                            ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(klassSerpovidnosti).AsValueString();
                                             break;
                                     }
                                     //
-                                    str_oboznach = ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter("ADSK_Обозначение").AsValueString();
+                                    str_oboznach = ListOfListsOfLists_fencesExamples[k][p][someNumber].Symbol.LookupParameter(ADSK_Oboznacheniye).AsValueString();
                                     foreach (var item in Materials)
                                     {
-                                        if (ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Материал").AsValueString() == item.Name)
+                                        if (ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_Material).AsValueString() == item.Name)
                                         {
-                                            str_mat = item.LookupParameter("ADSK_Материал наименование").AsValueString() + " " + item.LookupParameter("ADSK_Материал обозначение").AsValueString();
+                                            str_mat = item.LookupParameter(ADSK_MaterialNaimen).AsValueString() + " " + item.LookupParameter(ADSK_MaterialOboznach).AsValueString();
                                         }
                                     }
-                                    str_dlina = "L=" + ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Размер_Длина").AsValueString() + "мм";
+                                    str_dlina = "L=" + ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_RazmerDlina).AsValueString() + "мм";
 
                                     string sech_prof_and_oboznach = str_sech_prof + " " + str_oboznach;
                                     //// Наименование подготовка конец
@@ -761,7 +792,7 @@ namespace TrTrestAddin_MK.Commands
 
                                     ListOfMatrixes[k][i, 5] = ListOfListsOfLists_FExamplesEachDetailAmount[k][p][someNumber].ToString();
 
-                                    ListOfMatrixes[k][i, 6] = Math.Round(ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter("ADSK_Масса").AsDouble(), 2).ToString();
+                                    ListOfMatrixes[k][i, 6] = Math.Round(ListOfListsOfLists_fencesExamples[k][p][someNumber].LookupParameter(ADSK_Massa).AsDouble(), 2).ToString();
 
                                     ListOfMatrixes[k][i, 7] = Math.Round(ListOfLists_FExamplesWeightAmount[k][p], 2).ToString();
 
@@ -783,13 +814,13 @@ namespace TrTrestAddin_MK.Commands
 
         static void PutAtTableHeader(List<List<List<FamilyInstance>>> ListOfListsOfLists_fencesExamples, List<FamilyInstance> allFencesInstances, List<ViewSchedule> ViewSchedules,
             List<string[,]> ListOfMatrixes, List<string[]> ListOfArrays_Arr_sech_prof_and_oboznach, List<string[]> ListOfArrays_Arr_mat_and_mat_Oboznach, string vsName, string modelGroupValue,
-            Document doc, ref bool resultFailed)
+            Document doc, ref bool resultFailed, string ADSK_NaznacheniyeVida)
         {
             // Удаление ненужных спецификаций
             foreach (var item in ViewSchedules)
             {
                 if (item.IsValidObject == true && item.Name.Contains(vsName) && Convert.ToInt32(new String(item.Name.Where(Char.IsDigit).ToArray())) > ListOfListsOfLists_fencesExamples.Count)
-                { // !!! *** улучшить условие
+                {
                     doc.Delete(item.Id);
                 }
             }
@@ -841,7 +872,7 @@ namespace TrTrestAddin_MK.Commands
                         }
                     }
                 }
-                vs.LookupParameter("ADSK_Назначение вида").Set(modelGroupValue);
+                vs.LookupParameter(ADSK_NaznacheniyeVida).Set(modelGroupValue);
                 //
                 if (textNote == null)
                 {
@@ -849,7 +880,7 @@ namespace TrTrestAddin_MK.Commands
                     resultFailed = true;
                     return;
                 }
-                
+
 
                 // Заполнение спецификация лоджий
                 ScheduleFilling(vs, ListOfMatrixes[i], ListOfArrays_Arr_sech_prof_and_oboznach[i], ListOfArrays_Arr_mat_and_mat_Oboznach[i], vsNameLast, doc, catId, textNote);
@@ -1182,7 +1213,7 @@ namespace TrTrestAddin_MK.Commands
                     for (int j = 1; j < 7; j++)
                     {
                         if (j != 3 || (j == 3 && (tsd.GetCellText(i, j).ToLower().Contains("анкерный") || tsd.GetCellText(i, j).ToLower().Contains("пруток")))) // Если сост-эл это анкерный болт или пруток, или это не 4-й столбец
-                        { // !!! *** Использовать элементы Matrix для условие
+                        {
                             mergecellsTest.Left = j;
                             mergecellsTest.Right = j;
                             mergecellsTest.Top = i;
@@ -1194,7 +1225,7 @@ namespace TrTrestAddin_MK.Commands
                     for (int j = 1; j < 7; j++)
                     {
                         if (tsd.GetCellText(i, j).ToLower().Contains("анкерный") || tsd.GetCellText(i, j).ToLower().Contains("пруток")) // Если сост-эл это анкерный болт или пруток
-                        { // !!! *** Использовать элементы Matrix для условие
+                        {
                             for (int c = 2; c < 5; c++)
                             {
                                 mergecellsTest.Left = 2;
@@ -1271,7 +1302,7 @@ namespace TrTrestAddin_MK.Commands
                         overrideOptions.BorderTopLineStyle = true;
                         tableCellStyle.SetCellStyleOverrideOptions(overrideOptions);
                     }
-                    if (i == tsd.NumberOfRows - 2) // !!! *** Обработать Ситуацию, где в ограждение 1 элемент, тогда у последной ячейки и верхная и нижная граница должны быть жирным
+                    if (i == tsd.NumberOfRows - 2) // !!! *** Обработать Ситуацию, где в ограждение 1 элемент, тогда у последной ячейки и верхная и нижная граница должны быть жирным (хотя это маловероятно)
                     {
                         overrideOptions.BorderBottomLineStyle = true;
                         overrideOptions.BorderTopLineStyle = false;
