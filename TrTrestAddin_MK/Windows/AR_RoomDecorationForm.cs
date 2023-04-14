@@ -458,9 +458,7 @@ namespace TrTrestAddin_MK.Windows
         {
             uidoc = commandData.Application.ActiveUIDocument;
             doc = uidoc.Document;
-            TaskDialog.Show("t", listOfRooms.Count.ToString());
             listOfRooms_Got = listOfRooms;
-            TaskDialog.Show("t", listOfRooms_Got.Count.ToString());
         }
 
         public void Execute(UIApplication app)

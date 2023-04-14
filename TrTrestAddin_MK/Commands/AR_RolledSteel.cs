@@ -116,14 +116,14 @@ namespace TrTrestAddin_MK.Commands
 
 
     [Transaction(TransactionMode.Manual)]
-    public class StructMetalRolling : IExternalCommand
+    public class AR_RolledSteel : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             UIApplication uiapp = commandData.Application;
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
-
+            
             #region Все используемые параметры и значения - Если название параметра изменяются, то подправить их ниже
             // LookUpParameter()
             string opisaniye = "Описание";
@@ -151,13 +151,13 @@ namespace TrTrestAddin_MK.Commands
             string ADSK_Massa = "ADSK_Масса";
             string ADSK_Kolichestvo = "ADSK_Количество";
             // AsValueString()
-            string asVal_MetallicheskiyeKostr = "Металлические конструкции";
+            string asVal_MetallicheskiyeKonstr = "Металлические конструкции";
             string asVal_BoltAnkerniy = "Болт анкерный";
             string asVal_ProkatArmaturniy = "Прокат арматурный для железобетонных конструкций";
             #endregion
 
             // Вызываю Форму
-            StructMetalRollingInputForm inputFrm = new StructMetalRollingInputForm();
+            AR_RolledSteelInputForm inputFrm = new AR_RolledSteelInputForm();
             inputFrm.ShowDialog();
             if (inputFrm.isCloseBtnClicked)
                 return Result.Failed;
@@ -177,17 +177,17 @@ namespace TrTrestAddin_MK.Commands
                 // Получаю все экземпляры спецификаций в проекте (нужен для дальнешей обработки)
                 List<ViewSchedule> viewSchedules = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Schedules).WhereElementIsNotElementType().
                     Where(v => v.LookupParameter(ADSK_NaznacheniyeVida) != null).Cast<ViewSchedule>().ToList();
-                List<ViewSchedule> metalRollingViewSchedules = viewSchedules.Where(v => v.LookupParameter(ADSK_NaznacheniyeVida).AsValueString() == asVal_MetallicheskiyeKostr).ToList();
+                List<ViewSchedule> rolledSteelViewSchedules = viewSchedules.Where(v => v.LookupParameter(ADSK_NaznacheniyeVida).AsValueString() == asVal_MetallicheskiyeKonstr).ToList();
 
 
                 // Удаление ненужных спецификаций (выборочное)
                 if (allFencesInstances.Count != 0)
                 {
-                    if (metalRollingViewSchedules.Count != 0)
+                    if (rolledSteelViewSchedules.Count != 0)
                     {
                         var leftFences = allFencesInstances.Select(fam => fam.SuperComponent == null ? fam.Symbol.LookupParameter(opisaniye).AsValueString() :
                         (fam.SuperComponent as FamilyInstance).Symbol.LookupParameter(opisaniye).AsValueString()).Distinct().ToList(); // для уменьшение объема данных
-                        var result = metalRollingViewSchedules.Where(v => !leftFences.Any(s => v.Name.Contains(s))).ToList();
+                        var result = rolledSteelViewSchedules.Where(v => !leftFences.Any(s => v.Name.Contains(s))).ToList();
                         foreach (var view in result)
                         {
                             doc.Delete(view.Id);
@@ -197,11 +197,11 @@ namespace TrTrestAddin_MK.Commands
                 else
                 {
                     // Удаление ненужных спецификаций (Всех)
-                    if (metalRollingViewSchedules.Count != 0)
+                    if (rolledSteelViewSchedules.Count != 0)
                     {
                         if (MessageBox.Show("Не найдено ни одного экземпляра ограждения в проекте. \nХотите удалить все спецификации металлических конструкций?", "Внимание!", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                         {
-                            foreach (var view in metalRollingViewSchedules)
+                            foreach (var view in rolledSteelViewSchedules)
                             {
                                 doc.Delete(view.Id);
                             }
@@ -221,7 +221,7 @@ namespace TrTrestAddin_MK.Commands
                 }
                 //
 
-                // Проверка на отсутствие значение у параметра opisaniye
+                // Проверка на отсутствие значение у параметра "Описания"
                 List<string> wrongFences = new List<string>();
                 foreach (var item in allFencesInstances)
                 {
@@ -236,8 +236,8 @@ namespace TrTrestAddin_MK.Commands
                     }
                 }
 
-                //Форма для заполнение ограждений у котрых отсутствует параметр opisaniye 
-                StructMetalRollingEditingForm editFrm = new StructMetalRollingEditingForm(wrongFences);
+                //Форма для заполнение ограждений у которых отсутствует параметр "Описания"
+                AR_RolledSteelEditingForm editFrm = new AR_RolledSteelEditingForm(wrongFences);
                 if (wrongFences.Count > 0)
                 {
                     editFrm.ShowDialog();
@@ -265,7 +265,7 @@ namespace TrTrestAddin_MK.Commands
                 }
                 //
 
-                // Группирую ограждений по параметру opisaniye 
+                // Группирую ограждений по параметру "Описания"
                 List<List<FamilyInstance>> fencesInstancesByGroupModel = new List<List<FamilyInstance>>();
                 fencesInstancesByGroupModel.Add(new List<FamilyInstance>());
                 int nestedListIndex = 0;
@@ -307,11 +307,9 @@ namespace TrTrestAddin_MK.Commands
                         {
                             vsName = "О_" + fencesInstances[0].Symbol.LookupParameter(opisaniye).AsValueString() + "_#";
                             modelGroupValue = fencesInstances[0].Symbol.LookupParameter(ADSK_GruppaModeli).AsValueString();
-                            // Сортировка ограждений по ADSK_Marka
                             List<string> sorted_stringList = listSort(fencesInstances.Select(fam => fam.Symbol.LookupParameter(ADSK_Marka).AsValueString()).ToList());
                             fencesInstances = fencesInstances.OrderBy(fam => sorted_stringList.IndexOf(fam.Symbol.LookupParameter(ADSK_Marka).AsValueString())).ToList(); // Получаю отсортированных ограждений
                         }
-
 
 
                         #region Получаю размер строков массива

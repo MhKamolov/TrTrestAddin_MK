@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace TrTrestAddin_MK.Windows
 {
-    public partial class StructMetalRollingEditingForm : Form
+    public partial class AR_RolledSteelEditingForm : Form
     {
         public List<string> fencesNames = new List<string>();
         public List<string> fencesDescriptions = new List<string>();
@@ -18,7 +18,7 @@ namespace TrTrestAddin_MK.Windows
         public bool isOKBtnClicked = false;
         public bool isCloseBtnClicked = false;
 
-        public StructMetalRollingEditingForm(List<string> wrongFences)
+        public AR_RolledSteelEditingForm(List<string> wrongFences)
         {
             InitializeComponent();
             

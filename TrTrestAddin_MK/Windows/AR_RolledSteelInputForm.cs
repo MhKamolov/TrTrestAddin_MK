@@ -3,12 +3,12 @@ using Form = System.Windows.Forms.Form;
 
 namespace TrTrestAddin_MK.Windows
 {
-    public partial class StructMetalRollingInputForm : Form
+    public partial class AR_RolledSteelInputForm : Form
     {
         public int schHeight = 0;
         public bool isCloseBtnClicked = false;
         public bool isOKBtnClicked = false;
-        public StructMetalRollingInputForm()
+        public AR_RolledSteelInputForm()
         {
             InitializeComponent();
             numericUpDown1.Focus();

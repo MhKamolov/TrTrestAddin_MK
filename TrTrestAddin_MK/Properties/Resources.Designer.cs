@@ -63,9 +63,9 @@ namespace TrTrestAddin_MK.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap MetalRollingPic {
+        internal static System.Drawing.Bitmap AR_RolledSteel {
             get {
-                object obj = ResourceManager.GetObject("MetalRollingPic", resourceCulture);
+                object obj = ResourceManager.GetObject("AR_RolledSteel", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

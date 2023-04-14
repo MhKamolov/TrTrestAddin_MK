@@ -1,6 +1,6 @@
 ﻿namespace TrTrestAddin_MK.Windows
 {
-    partial class StructMetalRollingEditingForm
+    partial class AR_RolledSteelEditingForm
     {
         /// <summary>
         /// Required designer variable.
