@@ -22,35 +22,22 @@ namespace TrTrestAddin_MK.Commands
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
-            // Access current selection
-
             Selection sel = uidoc.Selection;
+            Reference hasPickOne = sel.PickObject(ObjectType.Element);
+            Element el = doc.GetElement(hasPickOne.ElementId);
+            var t = el.Location;
 
-            // Retrieve elements from database
-
-            FilteredElementCollector col
-              = new FilteredElementCollector(doc)
-                .WhereElementIsNotElementType()
-                .OfCategory(BuiltInCategory.INVALID)
-                .OfClass(typeof(Wall));
-
-            // Filtered element collector is iterable
-
-            foreach (Element e in col)
-            {
-                Debug.Print(e.Name);
-            }
-
+            
             // Modify document within a transaction
-
             using (Transaction tx = new Transaction(doc))
             {
                 tx.Start("Transaction Name");
+                ElementTransformUtils.CopyElement(doc, hasPickOne.ElementId, new XYZ(0, 0, 1));
                 TaskDialog.Show("t", "Тест");
+                
                 tx.Commit();
             }
-
             return Result.Succeeded;
-        }
-    }
+        }        
+    }  
 }

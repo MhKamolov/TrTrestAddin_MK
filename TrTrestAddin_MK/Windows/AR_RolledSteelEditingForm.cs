@@ -21,7 +21,7 @@ namespace TrTrestAddin_MK.Windows
         public AR_RolledSteelEditingForm(List<string> wrongFences)
         {
             InitializeComponent();
-            
+
             foreach (var item in wrongFences)
             {
                 listBox1.Items.Add(item);
@@ -44,7 +44,10 @@ namespace TrTrestAddin_MK.Windows
                 textBox1.Text = "";
                 listBox1.Items.Remove(listBox1.SelectedItem);
                 if (listBox1.Items.Count != 0)
-                    listBox1.SelectedIndex = listBox1.SelectedIndex + 1;
+                    if (listBox1.SelectedIndex != listBox1.Items.Count - 1)
+                        listBox1.SelectedIndex = listBox1.SelectedIndex + 1;
+                    else
+                        listBox1.SelectedIndex = 0;
                 else
                     fillBtn.Enabled = false;
 
@@ -60,7 +63,14 @@ namespace TrTrestAddin_MK.Windows
         {
             if (listBox1.Items.Count != 0)
             {
-                MessageBox.Show("Не все типоразмеры заполнены", "Внимание!");
+                //MessageBox.Show("Не все типоразмеры заполнены", "Внимание!");
+                DialogResult dialogResult = MessageBox.Show("Не все типоразмеры заполнены" +
+                    "\nХотите продолжить?", "Внимание!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (dialogResult == DialogResult.Yes)
+                {
+                    isOKBtnClicked = true;
+                    this.Close();
+                }
             }
             else
             {

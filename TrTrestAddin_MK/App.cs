@@ -20,7 +20,7 @@ namespace TrTrestAddin_MK
             
             #region AR
             RibbonPanel AR_panel = a.CreateRibbonPanel(tabName, "АР");
-
+            
             // creating the buttons 
             PushButtonData roomDecoration = new PushButtonData("Room_Decoration", "Отделка Помещений", Assembly.GetExecutingAssembly().Location, typeof(AR_RoomDecoration).FullName);
             roomDecoration.ToolTip = "Отделка Помещений";
@@ -57,12 +57,12 @@ namespace TrTrestAddin_MK
 
 
             #region Test 
-            //RibbonPanel TestPanel = a.CreateRibbonPanel(tabName, "Тест");
+            RibbonPanel TestPanel = a.CreateRibbonPanel(tabName, "Тест");
 
-            //// creating the buttons 
-            //PushButtonData test = new PushButtonData("Test", "Тест", Assembly.GetExecutingAssembly().Location, typeof(Test).FullName);
-            //test.ToolTip = "Тест";
-            //PushButton testBtn = TestPanel.AddItem(test) as PushButton;            
+            // creating the buttons 
+            PushButtonData test = new PushButtonData("Test", "Тест", Assembly.GetExecutingAssembly().Location, typeof(Test).FullName);
+            test.ToolTip = "Тест";
+            PushButton testBtn = TestPanel.AddItem(test) as PushButton;
             #endregion
 
             return Result.Succeeded;

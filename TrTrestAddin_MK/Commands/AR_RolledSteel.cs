@@ -123,7 +123,7 @@ namespace TrTrestAddin_MK.Commands
             UIApplication uiapp = commandData.Application;
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Document doc = uidoc.Document;
-            
+
             #region Все используемые параметры и значения - Если название параметра изменяются, то подправить их ниже
             // LookUpParameter()
             string opisaniye = "Описание";
@@ -221,7 +221,7 @@ namespace TrTrestAddin_MK.Commands
                 }
                 //
 
-                // Проверка на отсутствие значение у параметра "Описания"
+                // Проверка на отсутствие значение у параметра "Описания"                 
                 List<string> wrongFences = new List<string>();
                 foreach (var item in allFencesInstances)
                 {
@@ -235,9 +235,10 @@ namespace TrTrestAddin_MK.Commands
                         wrongFences.Add(item.Name);
                     }
                 }
+                wrongFences = listSort(wrongFences);
 
-                //Форма для заполнение ограждений у которых отсутствует параметр "Описания"
-                AR_RolledSteelEditingForm editFrm = new AR_RolledSteelEditingForm(wrongFences);
+                // Форма для заполнение ограждений у которых отсутствует параметр "Описания"
+                AR_RolledSteelEditingForm editFrm = new AR_RolledSteelEditingForm(wrongFences.Distinct().ToList());
                 if (wrongFences.Count > 0)
                 {
                     editFrm.ShowDialog();
@@ -263,28 +264,32 @@ namespace TrTrestAddin_MK.Commands
                         }
                     }
                 }
+                // 26.04 Начать отсюда проверить на многоуровненость
+                //List<string> helpList_allFI = listSort(allFencesInstances.Select(fam => fam.Symbol.LookupParameter(opisaniye).AsValueString()).ToList());
+                //allFencesInstances = allFencesInstances.OrderBy(fam => helpList_allFI.IndexOf(fam.Symbol.LookupParameter(opisaniye).AsValueString())).ToList(); // Получаю отсортированных ограждений
+                allFencesInstances = allFencesInstances.OrderBy(fam => fam.Symbol.LookupParameter(opisaniye).AsValueString()).ToList(); // Получаю отсортированных ограждений
                 //
 
                 // Группирую ограждений по параметру "Описания"
-                List<List<FamilyInstance>> fencesInstancesByGroupModel = new List<List<FamilyInstance>>();
-                fencesInstancesByGroupModel.Add(new List<FamilyInstance>());
+                List<List<FamilyInstance>> fencesInstancesByOpisaniye = new List<List<FamilyInstance>>();
+                fencesInstancesByOpisaniye.Add(new List<FamilyInstance>());
                 int nestedListIndex = 0;
                 for (int i = 0; i < allFencesInstances.Count; i++)
                 {
                     if (i != 0 && (allFencesInstances[i].Symbol.LookupParameter(opisaniye).AsValueString() != allFencesInstances[i - 1].Symbol.LookupParameter(opisaniye).AsValueString()))
                     {
-                        fencesInstancesByGroupModel.Add(new List<FamilyInstance>());
+                        fencesInstancesByOpisaniye.Add(new List<FamilyInstance>());
                         nestedListIndex++;
-                        fencesInstancesByGroupModel[nestedListIndex].Add(allFencesInstances[i]);
+                        fencesInstancesByOpisaniye[nestedListIndex].Add(allFencesInstances[i]);
                     }
                     else
-                        fencesInstancesByGroupModel[nestedListIndex].Add(allFencesInstances[i]);
+                        fencesInstancesByOpisaniye[nestedListIndex].Add(allFencesInstances[i]);
                 }
                 #endregion
 
 
                 #region Начинаю Создание спецификации
-                foreach (List<FamilyInstance> item in fencesInstancesByGroupModel)
+                foreach (List<FamilyInstance> item in fencesInstancesByOpisaniye)
                 {
                     List<FamilyInstance> fencesInstances = item;
                     string vsName = "";
@@ -878,7 +883,6 @@ namespace TrTrestAddin_MK.Commands
                     resultFailed = true;
                     return;
                 }
-
 
                 // Заполнение спецификация лоджий
                 ScheduleFilling(vs, ListOfMatrixes[i], ListOfArrays_Arr_sech_prof_and_oboznach[i], ListOfArrays_Arr_mat_and_mat_Oboznach[i], vsNameLast, doc, catId, textNote);
