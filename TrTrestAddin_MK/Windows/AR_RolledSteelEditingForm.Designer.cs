@@ -130,7 +130,7 @@
             this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             // 
-            // Struct_MetalRollingEditingForm
+            // AR_RolledSteelEditingForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -139,7 +139,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.CloseBtn);
             this.Controls.Add(this.OKBtn);
-            this.Name = "Struct_MetalRollingEditingForm";
+            this.Name = "AR_RolledSteelEditingForm";
             this.Text = "Правка параметров";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Struct_MetalRollingEditingForm_FormClosing);
             this.groupBox1.ResumeLayout(false);

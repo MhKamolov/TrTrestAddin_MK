@@ -28,6 +28,8 @@ namespace TrTrestAddin_MK.Windows
             }
             if (listBox1.Items.Count > 0)
                 listBox1.SelectedIndex = 0;
+            listBox1.SelectionMode = SelectionMode.MultiExtended;
+            //listBox1.SelectionMode = SelectionMode.MultiSimple;
         }
 
         private void fillBtn_Click(object sender, EventArgs e)
@@ -39,10 +41,16 @@ namespace TrTrestAddin_MK.Windows
             else
             {
                 fencesNames.Add(listBox1.SelectedItem.ToString());
-                fencesDescriptions.Add(textBox1.Text);
+                fencesDescriptions.Add(textBox1.Text.TrimEnd());
+
+                for (int i = listBox1.SelectedIndices.Count - 1; i >= 0; i--)
+                {
+                    fencesNames.Add(listBox1.SelectedItems[i].ToString());
+                    listBox1.Items.RemoveAt(listBox1.SelectedIndices[i]);
+                    fencesDescriptions.Add(textBox1.Text);
+                }
 
                 textBox1.Text = "";
-                listBox1.Items.Remove(listBox1.SelectedItem);
                 if (listBox1.Items.Count != 0)
                     if (listBox1.SelectedIndex != listBox1.Items.Count - 1)
                         listBox1.SelectedIndex = listBox1.SelectedIndex + 1;
@@ -50,12 +58,6 @@ namespace TrTrestAddin_MK.Windows
                         listBox1.SelectedIndex = 0;
                 else
                     fillBtn.Enabled = false;
-
-                joinList = new List<string>();
-                for (int i = 0; i < fencesNames.Count; i++)
-                {
-                    joinList.Add(fencesNames[i] + " - " + fencesDescriptions[i]);
-                }
             }
         }
 
@@ -63,8 +65,7 @@ namespace TrTrestAddin_MK.Windows
         {
             if (listBox1.Items.Count != 0)
             {
-                //MessageBox.Show("Не все типоразмеры заполнены", "Внимание!");
-                DialogResult dialogResult = MessageBox.Show("Не все типоразмеры заполнены" +
+                DialogResult dialogResult = MessageBox.Show("Не все типоразмеры заполнены." +
                     "\nХотите продолжить?", "Внимание!", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (dialogResult == DialogResult.Yes)
                 {
