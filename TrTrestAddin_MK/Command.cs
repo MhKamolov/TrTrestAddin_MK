@@ -26,7 +26,7 @@ namespace TrTrestAddin_MK
             Document doc = uidoc.Document;
             // ...
             // Access current selection
-
+            byte a = 0;
             Selection sel = uidoc.Selection;
 
             // Retrieve elements from database
