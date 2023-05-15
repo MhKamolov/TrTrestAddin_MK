@@ -24,7 +24,7 @@ namespace TrTrestAddin_MK
             UIDocument uidoc = uiapp.ActiveUIDocument;
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
-
+            // ...
             // Access current selection
 
             Selection sel = uidoc.Selection;

@@ -479,7 +479,7 @@ namespace TrTrestAddin_MK.Commands
             }
             #endregion
 
-            MessageBox.Show("Успешно!", "Внимание!");
+            MessageBox.Show("Успешно!", "Внимание!"); 
             return Result.Succeeded;
         }
 
