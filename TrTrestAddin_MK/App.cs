@@ -60,7 +60,7 @@ namespace TrTrestAddin_MK
             RibbonPanel TestPanel = a.CreateRibbonPanel(tabName, "义耱");
 
             // creating the buttons 
-            PushButtonData test = new PushButtonData("Test", "义耱", Assembly.GetExecutingAssembly().Location, typeof(Test).FullName);
+            PushButtonData test = new PushButtonData("Test", "义耱", Assembly.GetExecutingAssembly().Location, typeof(RVT_ParametersCompared).FullName);
             test.ToolTip = "义耱";
             PushButton testBtn = TestPanel.AddItem(test) as PushButton;
             #endregion
